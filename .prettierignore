@@ -1,0 +1,8 @@
+node_modules
+dist
+.wrangler
+.vinext
+.local
+worker-configuration.d.ts
+package-lock.json
+migrations/meta

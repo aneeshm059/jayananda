@@ -1,0 +1,64 @@
+{
+  "name": "jayananda",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@10.8.2",
+  "dependencies": {
+    "@vinext/cloudflare": "1.0.0-beta.10",
+    "better-auth": "1.7.5",
+    "drizzle-orm": "0.45.3",
+    "lucide-react": "1.48.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-server-dom-webpack": "19.3.0",
+    "vinext": "1.0.0-beta.12",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.59.0",
+    "@cloudflare/workers-types": "5.20260924.1",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "26.6.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "@vitejs/plugin-rsc": "0.5.35",
+    "drizzle-kit": "0.31.11",
+    "prettier": "3.9.9",
+    "sharp": "0.35.4",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.1",
+    "vitest": "5.0.1",
+    "wrangler": "4.138.0"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "start": "wrangler dev --config dist/server/wrangler.json",
+    "deploy": "wrangler deploy --config dist/server/wrangler.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "vinext check",
+    "db:create": "wrangler d1 create jayananda-production --location apac",
+    "db:generate": "drizzle-kit generate",
+    "db:local": "wrangler d1 migrations apply DB --local",
+    "db:remote": "wrangler d1 migrations apply DB --remote",
+    "seed": "tsx scripts/seed.ts",
+    "seed:clear": "tsx scripts/seed.ts --clear",
+    "test:integration": "tsx scripts/integration.ts",
+    "types": "wrangler types",
+    "setup:local": "tsx scripts/setup-local.ts",
+    "test:bootstrap": "tsx scripts/bootstrap-test.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.0"
+    }
+  }
+}

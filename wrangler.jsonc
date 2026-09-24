@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jayananda",
+  "compatibility_date": "2026-09-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "vinext/server/fetch-handler",
+  "assets": {
+    "directory": "dist/client",
+    "not_found_handling": "none",
+    "binding": "ASSETS",
+  },
+  "account_id": "f85d6a8d3ed07a31f4b1dffdda7bfd82",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jayananda-production",
+      "database_id": "e3233e1a-de87-4cb0-bf87-67dde543a10e",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "vars": {
+    "BETTER_AUTH_URL": "https://jayananda.aneeshm059.workers.dev",
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1,
+  },
+}
