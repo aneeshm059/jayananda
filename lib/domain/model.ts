@@ -1,4 +1,7 @@
+import type { HabitBundle } from './habits';
 export const healthNote = 'This reflects consistency of practice, not spiritual advancement.';
+export const defaultPurposeReminder =
+  'I practice to deepen my relationship with Krishna, hear with care, and become useful in service.';
 export const morningOptions = [
   'Mangala-arati',
   'Narasimha prayers',
@@ -49,6 +52,7 @@ export type Weights = {
 };
 export interface Settings {
   name: string;
+  purposeReminder: string;
   timezone: string;
   appName: string;
   subtitle: string;
@@ -67,6 +71,7 @@ export interface Settings {
 }
 export const defaultSettings: Settings = {
   name: 'Aneesh',
+  purposeReminder: defaultPurposeReminder,
   timezone: 'Asia/Kolkata',
   appName: 'JAYANANDA',
   subtitle: 'My Sādhana Journey',
@@ -140,6 +145,7 @@ export type Entry = {
 };
 export type Records = Record<Collection, Entry[]>;
 export interface AppState {
+  habits: HabitBundle;
   settings: Settings;
   records: Records;
   today: string;

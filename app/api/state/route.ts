@@ -2,6 +2,7 @@ import { authorize, json, safe, HttpError } from '@/lib/http';
 import { getSettings, records } from '@/lib/db/repository';
 import { localDate, monthBounds, addDays } from '@/lib/domain/dates';
 import { dateSchema } from '@/lib/domain/validation';
+import { habitBundle } from '@/lib/db/habits';
 export const GET = (request: Request) =>
   safe(async () => {
     const user = await authorize(request);
@@ -14,6 +15,7 @@ export const GET = (request: Request) =>
       throw new HttpError(400, 'Choose a range of up to one year.');
     return json({
       settings,
+      habits: await habitBundle(user.id, today),
       records: await records(user.id, from, to),
       today,
       from,

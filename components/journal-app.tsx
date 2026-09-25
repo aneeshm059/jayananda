@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useState, useRef, lazy, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -13,6 +13,7 @@ import {
   CalendarDays,
   ChartNoAxesCombined,
   Sprout,
+  ListChecks,
   Compass,
   Settings2,
   LogOut,
@@ -23,9 +24,12 @@ import {
   X,
 } from 'lucide-react';
 import { type AppState, type Collection, type Entry, type Settings } from '@/lib/domain/model';
-import { addDays, monthBounds } from '@/lib/domain/dates';
+import { localDate, prettyDate, addDays, monthBounds } from '@/lib/domain/dates';
 import { onDate, totals } from '@/lib/domain/calculations';
 import { Dashboard } from './today';
+import { request } from '@/lib/client';
+import type { Habit, HabitInput, HabitCheckinInput, HabitCheckin } from '@/lib/domain/habits';
+const HabitsPage = lazy(() => import('./habits-page').then((m) => ({ default: m.HabitsPage })));
 import { EntryForm } from './entry-form';
 import { FocusMode } from './focus-mode';
 const PracticePage = lazy(() =>
@@ -39,6 +43,9 @@ const InspirationPage = lazy(() =>
   import('./inspiration-page').then((m) => ({ default: m.InspirationPage })),
 );
 export type Actions = {
+  saveHabit: (input: HabitInput, id?: string) => Promise<Habit>;
+  checkHabit: (id: string, input: HabitCheckinInput, today: string) => Promise<HabitCheckin>;
+  archiveHabit: (id: string, archived: boolean) => Promise<void>;
   open: (collection: Collection, entry?: Partial<Entry>) => void;
   save: (collection: Collection, data: Record<string, unknown>, id?: string) => Promise<void>;
   remove: (collection: Collection, id: string) => Promise<void>;
@@ -48,6 +55,7 @@ export type Actions = {
 };
 const nav = [
   ['', 'Today', Sun],
+  ['habits', 'Habit Tracker', ListChecks],
   ['japa', 'Japa', Flower2],
   ['hearing', 'Hearing', Headphones],
   ['reading', 'Reading', BookOpen],
@@ -63,34 +71,6 @@ const nav = [
   ['purpose', 'My Purpose', Compass],
   ['settings', 'Settings', Settings2],
 ] as const;
-async function request<T>(url: string, method = 'GET', data?: unknown): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      method,
-      headers: data ? { 'Content-Type': 'application/json' } : undefined,
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  } catch {
-    throw new Error('Couldn’t confirm the save. Please check your connection and try again.');
-  }
-  if (response.status === 401) {
-    window.location.href = '/login';
-    throw new Error('Please sign in again.');
-  }
-  let value: unknown;
-  try {
-    value = await response.json();
-  } catch {
-    throw new Error('Couldn’t connect to your journal. Please try again.');
-  }
-  const problem = value as { error?: string; message?: string };
-  if (!response.ok)
-    throw new Error(
-      problem.error || problem.message || 'Couldn’t save this entry. Please try again.',
-    );
-  return value as T;
-}
 export function JournalApp() {
   const path = usePathname().split('/')[1] ?? '';
   const [state, setState] = useState<AppState | null>(null),
@@ -100,21 +80,55 @@ export function JournalApp() {
     [mobile, setMobile] = useState(false),
     [modal, setModal] = useState<{ collection: Collection; entry?: Partial<Entry> } | null>(null),
     [focus, setFocus] = useState<'japa' | 'krishna' | null>(null);
+  const refreshSequence = useRef(0);
   const refresh = useCallback(async (selected?: string) => {
+    const sequence = ++refreshSequence.current;
     const bounds = selected ? monthBounds(selected) : null;
     const suffix = bounds ? `?from=${addDays(bounds[0], -7)}&to=${addDays(bounds[1], 7)}` : '';
     const next = await request<AppState>('/api/state' + suffix);
+    if (sequence !== refreshSequence.current) return next;
     setState(next);
     setDate((previous) => selected || previous || next.today);
     setError('');
     return next;
   }, []);
+  const initialize = useCallback(
+    () =>
+      request('/api/habits/starter', 'POST', {})
+        .then(() => refresh())
+        .catch((e) => setError(e.message)),
+    [refresh],
+  );
   useEffect(() => {
-    void refresh().catch((e) => setError(e.message));
-  }, [refresh]);
+    void initialize();
+  }, [initialize]);
   useEffect(() => {
     setMobile(false);
   }, [path]);
+  useEffect(() => {
+    if ((path === '' || path === 'habits') && state && date !== state.today) {
+      setDate(state.today);
+      void refresh(state.today).catch((e) => setError(e.message));
+    }
+  }, [path, date, state?.today, refresh]);
+  useEffect(() => {
+    if (!state) return;
+    const syncDay = () => {
+      if (
+        document.visibilityState === 'visible' &&
+        localDate(state.settings.timezone) !== state.today
+      )
+        void refresh().catch((e) => setError(e.message));
+    };
+    const interval = setInterval(syncDay, 30000);
+    window.addEventListener('focus', syncDay);
+    document.addEventListener('visibilitychange', syncDay);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', syncDay);
+      document.removeEventListener('visibilitychange', syncDay);
+    };
+  }, [state?.today, state?.settings.timezone, refresh]);
   useEffect(() => {
     if (!state) return;
     const media = window.matchMedia('(prefers-color-scheme: dark)');
@@ -153,7 +167,46 @@ export function JournalApp() {
         : 'Saved to your journal.',
     );
   };
+  const refreshAfterHabit = async () => {
+    try {
+      await refresh(date);
+    } catch {
+      setError(
+        'Your habit was saved. Refresh when your connection returns to see the latest report.',
+      );
+    }
+  };
   const actions: Actions = {
+    saveHabit: async (input, id) => {
+      const saved = await request<Habit>(
+        '/api/habits' + (id ? '/' + id : ''),
+        id ? 'PATCH' : 'POST',
+        input,
+      );
+      await refreshAfterHabit();
+      setToast('Your commitment is saved.');
+      return saved;
+    },
+    checkHabit: async (id, input, today) => {
+      try {
+        const saved = await request<HabitCheckin>(
+          '/api/habits/' + id + '/checkin',
+          'PATCH',
+          input,
+          { 'x-habit-day': today },
+        );
+        await refreshAfterHabit();
+        return saved;
+      } catch (e) {
+        if ((e as Error).message.includes('new day')) void refresh().catch(() => {});
+        throw e;
+      }
+    },
+    archiveHabit: async (id, archived) => {
+      await request('/api/habits/' + id, 'PATCH', { archived });
+      await refreshAfterHabit();
+      setToast(archived ? 'Habit archived. Your history is kept.' : 'Habit restored.');
+    },
     open: (collection, entry) => {
       const last = state?.records[collection][0];
       const defaults: Partial<Entry> = {};
@@ -193,16 +246,14 @@ export function JournalApp() {
         <h1>Jayananda</h1>
         <p role="status">{error || 'Opening your journal…'}</p>
         {error && (
-          <button
-            className="button primary"
-            onClick={() => void refresh().catch((e) => setError(e.message))}
-          >
+          <button className="button primary" onClick={() => void initialize()}>
             Try again
           </button>
         )}
       </main>
     );
-  const r = onDate(state.records, date),
+  const journalDate = path === '' || path === 'habits' ? state.today : date;
+  const r = onDate(state.records, journalDate),
     t = totals(r, state.settings);
   if (focus)
     return (
@@ -242,7 +293,7 @@ export function JournalApp() {
               href={'/' + slug}
               className={
                 (path === slug ? 'active ' : '') +
-                (i === 8 || i === 11 || i === 14 ? 'nav-divider' : '')
+                (['history', 'jayananda', 'settings'].includes(slug) ? 'nav-divider' : '')
               }
               aria-current={path === slug ? 'page' : undefined}
             >
@@ -288,15 +339,21 @@ export function JournalApp() {
           </span>
           <div className="top-actions">
             <span className="private-label">Just you and your practice</span>
-            <label className="date-control">
-              <span className="sr-only">Journal date</span>
-              <input
-                aria-label="Journal date"
-                type="date"
-                value={date}
-                onChange={(e) => actions.setDate(e.target.value)}
-              />
-            </label>
+            {path === '' || path === 'habits' ? (
+              <time className="automatic-date" dateTime={state.today}>
+                {prettyDate(state.today, { day: 'numeric', month: 'short' })}
+              </time>
+            ) : (
+              <label className="date-control">
+                <span className="sr-only">Journal date</span>
+                <input
+                  aria-label="Journal date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => actions.setDate(e.target.value)}
+                />
+              </label>
+            )}
             <button
               aria-label="Quick add"
               className="button small primary"
@@ -342,7 +399,9 @@ export function JournalApp() {
                 <Link href="/">Return to Today →</Link>
               </section>
             ) : path === '' ? (
-              <Dashboard state={state} date={date} actions={actions} />
+              <Dashboard state={state} date={state.today} actions={actions} />
+            ) : path === 'habits' ? (
+              <HabitsPage state={state} actions={actions} />
             ) : ['history', 'weekly', 'monthly'].includes(path) ? (
               <ReviewPage
                 kind={path as 'history' | 'weekly' | 'monthly'}
@@ -378,7 +437,7 @@ export function JournalApp() {
           ['', 'Today', Sun],
           ['japa', 'Japa', Flower2],
           ['reading', 'Learn', BookOpen],
-          ['seva', 'Seva', HeartHandshake],
+          ['habits', 'Habits', ListChecks],
         ].map(([slug, label, Icon]) => {
           const I = Icon as typeof Sun;
           return (
@@ -403,7 +462,7 @@ export function JournalApp() {
           key={modal.collection + (modal.entry?.id ?? 'new')}
           collection={modal.collection}
           entry={modal.entry}
-          date={date}
+          date={journalDate}
           settings={state.settings}
           krishnaPending={!t.krishna}
           onRead={() => {

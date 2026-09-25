@@ -16,9 +16,11 @@ import {
   Sprout,
 } from 'lucide-react';
 import { type AppState, type Collection, defaultSankalpa, healthNote } from '@/lib/domain/model';
-import { onDate, totals, health, dayMode } from '@/lib/domain/calculations';
-import { localTime, prettyDate } from '@/lib/domain/dates';
+import { onDate, totals, health, dayMode, period } from '@/lib/domain/calculations';
+import { localTime, prettyDate, addDays, formatMinutes } from '@/lib/domain/dates';
 import type { Actions } from './journal-app';
+import { HabitDashboard } from './habit-checkin';
+import { PurposeCue } from './purpose-cue';
 export function Beads({ rounds, target }: { rounds: number; target: number }) {
   return (
     <div className="beads" aria-label={`${rounds} of ${target} rounds completed`}>
@@ -71,6 +73,49 @@ export function Dashboard({
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');
   const pendingRound = useRef<string | null>(null);
+  const recent = totals(period(state.records, addDays(state.today, -6), state.today), s);
+  const previousDates = ['japa', 'hearing', 'reading', 'krishna', 'seva', 'reflection']
+    .flatMap((key) => state.records[key as Collection].map((e) => e.date))
+    .filter((d) => d < state.today)
+    .sort();
+  const lastPractice = previousDates.at(-1);
+  const welcomeBack =
+    lastPractice &&
+    lastPractice < addDays(state.today, -1) &&
+    !v.rounds &&
+    !v.hearing &&
+    !v.reading &&
+    !v.krishna;
+  const nextStep =
+    evening && v.krishna < target.krishna
+      ? {
+          label: v.krishna ? 'Continue Krishna Book' : 'Begin Krishna Book',
+          note: 'End the day with a little remembrance.',
+          run: () => actions.focus('krishna'),
+        }
+      : v.rounds < target.japa
+        ? {
+            label: v.rounds ? 'Continue my Japa' : 'Begin Japa',
+            note: 'Put distractions aside. Begin with one attentive round.',
+            run: () => actions.focus('japa'),
+          }
+        : v.hearing < target.hearing
+          ? {
+              label: 'Make time for hearing',
+              note: 'Carry one instruction into the rest of your day.',
+              run: () => actions.open('hearing'),
+            }
+          : v.reading < target.reading
+            ? {
+                label: 'Read a few pages',
+                note: 'A little attentive reading is a meaningful beginning.',
+                run: () => actions.open('reading'),
+              }
+            : {
+                label: v.reflections ? 'Return to my reflection' : 'Offer a few sincere lines',
+                note: 'Look back with gratitude and carry one intention forward.',
+                run: () => actions.open('reflection', r.reflection[0]),
+              };
   async function quick(rounds: number) {
     setBusy(true);
     try {
@@ -162,6 +207,9 @@ export function Dashboard({
         <div className="hero-copy">
           <span className="hero-date">{prettyDate(date)}</span>
           <h1>{evening ? 'Complete the day peacefully.' : `Hare Krishna, ${s.name}.`}</h1>
+          <p className="hero-welcome">
+            {welcomeBack ? 'Welcome back. Begin again with one small practice.' : nextStep.note}
+          </p>
           <div className="hero-intention">
             <button
               className="eyebrow"
@@ -172,17 +220,10 @@ export function Dashboard({
             <p>“{r.sankalpa[0]?.text || defaultSankalpa}”</p>
           </div>
           <div className="hero-actions">
-            <button
-              className="button cream"
-              onClick={() => actions.focus(evening ? 'krishna' : 'japa')}
-            >
-              {evening ? <Moon size={17} /> : <Flower2 size={18} />}{' '}
-              {evening ? 'Begin Krishna Book reading' : 'Begin Japa'}
+            <button className="button cream" onClick={nextStep.run}>
+              {evening ? <Moon size={17} /> : <Flower2 size={18} />} {nextStep.label}
               <ArrowRight size={17} />
             </button>
-            <Link href="/purpose">
-              Remind me why <ArrowRight size={14} />
-            </Link>
           </div>
         </div>
         <div className="hero-corner">
@@ -190,6 +231,8 @@ export function Dashboard({
           <span>HEARING · CHANTING · SERVICE</span>
         </div>
       </section>
+      <PurposeCue state={state} actions={actions} />
+      <HabitDashboard state={state} actions={actions} />
       <div className="section-heading">
         <div>
           <p className="eyebrow">ONE PRACTICE AT A TIME</p>
@@ -355,6 +398,30 @@ export function Dashboard({
             ))}
         </section>
       )}
+      <section className="recent-encouragement">
+        <div>
+          <p className="eyebrow">THE LAST SEVEN DAYS</p>
+          <h2>Your small efforts matter.</h2>
+          <p>
+            {recent.krishnaNights
+              ? `You made time for Krishna Book on ${recent.krishnaNights} ${recent.krishnaNights === 1 ? 'evening' : 'evenings'}.`
+              : recent.rounds
+                ? `You recorded ${recent.rounds} rounds of Japa. Keep making space to hear.`
+                : 'Your journey can begin with one small practice today.'}
+          </p>
+        </div>
+        <div className="recent-practice-facts">
+          <span>
+            <strong>{recent.rounds}</strong> Japa rounds
+          </span>
+          <span>
+            <strong>{formatMinutes(recent.hearing)}</strong> hearing
+          </span>
+          <Link href="/weekly" className="text-button">
+            Reflect on my week <ArrowRight size={16} />
+          </Link>
+        </div>
+      </section>
       <div className="closing-note">
         <Flower2 size={20} />
         <p>

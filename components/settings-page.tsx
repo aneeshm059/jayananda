@@ -150,6 +150,20 @@ export function SettingsPage({
           </div>
         </section>
         <section className="panel">
+          <h2>Why I practice</h2>
+          <p className="muted">A personal reminder to welcome you back each day.</p>
+          <label>
+            Daily purpose reminder
+            <textarea
+              value={s.purposeReminder}
+              onChange={(e) => set('purposeReminder', e.target.value)}
+              maxLength={240}
+              required
+              rows={3}
+            />
+          </label>
+        </section>
+        <section className="panel">
           <h2>My ideal day</h2>
           <p className="muted">A rhythm to gently work toward.</p>
           {targetFields('ideal')}
@@ -355,6 +369,7 @@ export function SettingsPage({
                 <Download size={16} /> All data · JSON
               </a>
               {[
+                ['habits', 'Habits'],
                 ['japa', 'Japa'],
                 ['hearing', 'Hearing'],
                 ['reading', 'Reading'],

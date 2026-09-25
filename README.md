@@ -15,8 +15,16 @@ Live: [jayananda.aneeshm059.workers.dev](https://jayananda.aneeshm059.workers.de
 - Jayananda quality prompts, Śrīla Prabhupāda association, personal purpose, goals and reminder cues.
 - Onboarding, timezone/theme/hero settings, JSON/CSV export and password changes.
 - Responsive sidebar/mobile navigation, light/dark themes, reduced-motion support and useful empty states.
+- Custom habit commitments with daily toggles, optional Extra notes, yearly calendars and dashboard reports.
+- More readable controls, a visible daily purpose reminder, a suggested next practice and gentle weekly encouragement.
 
 **“This reflects consistency of practice, not spiritual advancement.”**
+
+## Daily habits
+
+Habit Tracker starts with Brahmacharya, Soulful Japa and Away from Social Media, each with a one-year commitment beginning on your first visit after this update. Create or edit a habit with its name, start date, end date and what you intend to follow. Archive and restore habits without losing their records.
+
+Daily check-ins have no date picker. The server captures the current date in your configured timezone (Asia/Kolkata by default); an overnight page refreshes to the new day. Mark the toggle only when you followed the habit. Extra notes are optional and save independently, so unticking keeps your notes. History is read-only. Today is reported separately from consistency totals, which cover elapsed past days; unmarked days remain “Not marked.” Habits do not change Sādhana Health scores.
 
 ## Stack
 
@@ -75,7 +83,7 @@ npm run db:local
 npm run db:remote
 ```
 
-`db:local` uses `.wrangler/state`; `db:remote` explicitly targets production. The initial migration creates 25 tables and their indexes. Generate new migrations rather than editing applied ones.
+`db:local` uses `.wrangler/state`; `db:remote` explicitly targets production. The initial migration creates 25 tables and their indexes; the habit migration adds two tables. Generate new migrations rather than editing applied ones.
 
 ## Build, test and deploy
 
@@ -88,6 +96,7 @@ npm run build
 npm start -- --port 3000 --persist-to .wrangler/state --env-file .dev.vars
 # In another terminal, after local seeding:
 npm run test:integration
+npm run test:habits
 
 # Optional first-account test, ONLY on disposable local data:
 npm run seed:clear
@@ -112,7 +121,7 @@ For a custom domain, add a Workers Custom Domain for an existing Cloudflare-mana
 
 ## Backups and recovery
 
-In-app JSON exports include user settings and practice records. CSV is per practice. Keep regular exports somewhere private; import is not implemented yet. D1 [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/) provides recovery within the plan's retention window; check the dashboard before relying on it.
+In-app JSON exports include user settings, practice records, habit definitions and habit check-ins. CSV is per practice, with a separate Habits export. Keep regular exports somewhere private; import is not implemented yet. D1 [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/) provides recovery within the plan's retention window; check the dashboard before relying on it.
 
 ```sh
 npx wrangler d1 export DB --remote --output .local/jayananda-backup.sql

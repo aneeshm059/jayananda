@@ -334,3 +334,47 @@ export const tables = {
   goals,
   reminders,
 };
+
+export const habits = sqliteTable(
+  'habits',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    intention: text('intention').notNull(),
+    startDate: text('start_date').notNull(),
+    endDate: text('end_date').notNull(),
+    archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
+    starterKey: text('starter_key'),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [
+    index('habits_user_dates').on(t.userId, t.startDate, t.endDate),
+    uniqueIndex('habits_user_starter').on(t.userId, t.starterKey),
+    check('habit_dates_order', sql`${t.endDate} >= ${t.startDate}`),
+  ],
+);
+export const habitCheckins = sqliteTable(
+  'habit_checkins',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    habitId: text('habit_id')
+      .notNull()
+      .references(() => habits.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(),
+    completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
+    notes: text('notes').notNull().default(''),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [
+    uniqueIndex('habit_checkin_day').on(t.habitId, t.date),
+    index('habit_checkin_user_date').on(t.userId, t.date),
+    check('habit_completed_boolean', sql`${t.completed} IN (0, 1)`),
+  ],
+);

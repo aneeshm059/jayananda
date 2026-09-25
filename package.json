@@ -49,6 +49,7 @@
     "seed": "tsx scripts/seed.ts",
     "seed:clear": "tsx scripts/seed.ts --clear",
     "test:integration": "tsx scripts/integration.ts",
+    "test:habits": "tsx scripts/habits-integration.ts",
     "types": "wrangler types",
     "setup:local": "tsx scripts/setup-local.ts",
     "test:bootstrap": "tsx scripts/bootstrap-test.ts"

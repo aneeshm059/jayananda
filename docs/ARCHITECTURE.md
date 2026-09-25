@@ -34,7 +34,15 @@ Registration requires a random invitation, the configured owner email, and an em
 
 New session saves carry idempotency UUIDs, so retrying an uncertain response does not add rounds twice. Daily entries upsert on `(user_id,date)`. Saving a night reflection and closing its day uses an atomic D1 batch; moving/removing the reflection updates the corresponding day state.
 
-## Calculations
+## Habit commitments
+
+`habits` stores each user's name, intention, inclusive start/end dates and archive state. `habit_checkins` stores the boolean and optional notes, with a unique `(habit_id, date)` constraint. These tables have dedicated user-scoped routes and are excluded from the generic practice CRUD API. Starter habits are created once per user through an authenticated, origin-checked POST, using unique starter keys to make retries safe.
+
+Daily PATCH bodies accept only `completed` and/or `notes`. The server computes the current day from its clock and the user's timezone. An automatically supplied `x-habit-day` header rejects stale overnight submissions; it cannot select the storage date. The UI refreshes at day rollover and keeps unsaved notes for review. Upserts update only supplied fields, preserving notes when a toggle changes. Future, finished and archived habits reject check-ins. Definition edits cannot move existing check-ins outside the commitment's dates.
+
+Dashboard requests include all habit definitions with aggregate past-day completion counts and the last seven check-in days. Individual calendars load one year at a time. Reports exclude today and future dates from elapsed-day denominators and show today's state separately; they measure recorded consistency only. Archive retains all data; it hides a habit from today's controls rather than pausing its date range. JSON/CSV exports include habits and notes. Habit data does not alter Sādhana Health.
+
+## Practice calculations
 
 Calendar dates use the configured IANA timezone. Weeks start Monday. Weekly/monthly denominators include elapsed days and exclude future dates. Missing ratings do not count as zero. Multiple positive Krishna Book sessions count as one reading night.
 

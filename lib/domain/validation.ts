@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { morningOptions, qualities } from './model';
+import { morningOptions, qualities, defaultPurposeReminder } from './model';
 export const dateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -190,6 +190,7 @@ const targets = z.object({
   }),
   weight = z.number().min(0).max(100);
 export const settingsSchema = z.object({
+  purposeReminder: z.string().trim().min(1).max(240).default(defaultPurposeReminder),
   name: title.max(80),
   timezone: z.string().refine((v) => {
     try {
