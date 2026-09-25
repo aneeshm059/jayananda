@@ -26,6 +26,17 @@ Habit Tracker starts with Brahmacharya, Soulful Japa and Away from Social Media,
 
 Daily check-ins have no date picker. The server captures the current date in your configured timezone (Asia/Kolkata by default); an overnight page refreshes to the new day. Mark the toggle only when you followed the habit. Extra notes are optional and save independently, so unticking keeps your notes. History is read-only. Today is reported separately from consistency totals, which cover elapsed past days; unmarked days remain “Not marked.” Habits do not change Sādhana Health scores.
 
+## Install on your phone
+
+Open [Jayananda](https://jayananda.aneeshm059.workers.dev) in your phone's browser:
+
+- **Android / Chrome:** menu → Install and create shortcut → Install (older versions may show Add to Home screen or Install app).
+- **iPhone / Safari:** Share → Add to Home Screen → enable Open as Web App if shown → Add.
+
+Launch the Jayananda icon from your home screen for a standalone app window. Sign in normally. An internet connection is required for journal data and saves; the offline screen offers a retry when disconnected. No private pages, entries, API responses or credentials are stored by the service worker. Browser installation labels and support can vary; see [Chrome's instructions](https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid&hl=en) and [Apple's instructions](https://support.apple.com/guide/iphone/iphea86e5236/ios).
+
+The manifest, service worker and icons are in `public/`; the root layout registers the worker on production builds. Regenerate icons from the existing flower mark with `node scripts/generate-pwa-icons.mjs`. Increment the public offline cache version when changing its content. A new worker activates after older app windows close, without interrupting unsaved forms.
+
 ## Stack
 
 TypeScript, React, Next.js-compatible App Router through vinext, Tailwind CSS and custom accessible components, Better Auth, Drizzle, Workers and D1. The [Cloudflare Next.js guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/) recommends vinext for new projects; this project's features pass its compatibility check. vinext remains beta, so versions are pinned. See [architecture and schema](docs/ARCHITECTURE.md), [assets](docs/ASSETS.md) and [verification](docs/VERIFICATION.md).
@@ -145,4 +156,4 @@ Store backups privately and encrypt any off-device copy. For recovery, stop writ
 
 Internet is required. Timers save only after Finish; reloading loses an unfinished session. Reminders are in-app cues without push/email delivery. Historical summaries use current targets/weights. Full exports are intended for a personal-sized journal. There is no email password reset, data import, account deletion UI or additional-user invitation UI. vinext is beta; upgrades require compatibility, Worker and browser checks.
 
-Suggested next steps: PWA/offline drafts, verified password recovery, import/restore, historical target snapshots, optional push reminders, book progress, a sourced quote/story library, Ekādaśī/festival calendar and a yearly PDF journal. Keep them optional and preserve a quiet practice-first experience.
+Suggested next steps: offline drafts, verified password recovery, import/restore, historical target snapshots, optional push reminders, book progress, a sourced quote/story library, Ekādaśī/festival calendar and a yearly PDF journal. Keep them optional and preserve a quiet practice-first experience.

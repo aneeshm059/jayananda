@@ -1,5 +1,20 @@
 # Release verification — 25 September 2026
 
+## PWA installation release
+
+Phone installation support adds a standalone web app manifest, Android regular/maskable icons, an iPhone touch icon and metadata, and a service worker with a public offline fallback. Existing journal behavior and database schema are unchanged.
+
+- TypeScript and production build passed; 63 unit tests passed, including 11 service-worker privacy/lifecycle tests.
+- 13 HTTP delivery checks passed both locally and in production: manifest identity/scope/display, PNG sizes, Apple/Android metadata, service-worker MIME/cache headers, the canonical offline URL, existing bundle caching, and authenticated API protection.
+- Browser testing verified the worker registration, then stopped the actual local server. Reload displayed the cached offline message; after restarting the server, Try again reopened the journal normally.
+- The worker caches only the public offline message. API calls, mutations, private page responses and credentials are never added to Cache Storage. Updates wait for old windows to close, preserving open forms.
+
+Install instructions are in the README. Physical Android/iPhone home-screen installation was not performed in this desktop environment.
+
+Deployment version: `728086db-1b4b-443f-a910-08ef4f3cbd22`.
+
+## Habit tracker release
+
 The habit tracker and daily companion update was tested on the built local Cloudflare Worker with local D1. Production received only the additive migration and app deployment; private production records were not used as test fixtures.
 
 | Check                                   | Result                                                                                        |
