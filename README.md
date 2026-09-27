@@ -7,7 +7,8 @@ Live: [jayananda.aneeshm059.workers.dev](https://jayananda.aneeshm059.workers.de
 ## Version 1
 
 - Time-aware cinematic Today page, daily sankalpa, configurable morning program and wake discipline.
-- Japa beads, +1/+4 logging, full sessions, attention reflections and a distraction-free timer.
+- Japa beads, −1/+1/+4 logging, full sessions, attention reflections and a distraction-free timer.
+- Today Report with automatic date, saved details, daily target progress and pending habit check-ins.
 - Hearing, daytime reading, separate Krishna Book night reading/timer, seva and association.
 - Gentle night-reading check, night reflection and “Offer today to Krishna.”
 - Ideal/Minimum Day targets and configurable Sādhana Health weights, without spiritual judgments or competition.
@@ -19,6 +20,12 @@ Live: [jayananda.aneeshm059.workers.dev](https://jayananda.aneeshm059.workers.de
 - More readable controls, a visible daily purpose reminder, a suggested next practice and gentle weekly encouragement.
 
 **“This reflects consistency of practice, not spiritual advancement.”**
+
+## Today Report and Japa corrections
+
+Open **Today Report** in the sidebar, the dashboard shortcut, or **Report** in the phone navigation. It always uses today in your configured timezone. The report shows Japa rounds, wake-up time, progress against the active Ideal/Minimum Day targets, and active habits still unmarked. Expand recorded entries to see all saved fields and notes, including individual morning practices. Optional practices are not counted as pending; a recorded late wake-up time is still shown as recorded.
+
+Use **−1 round** on Today or Japa to correct the most recent positive session for that date. The count stops at zero and keeps the session’s notes, duration and times. Concurrent requests and retries cannot apply the same correction twice. In focus mode, the minus button corrects only the current unsaved session.
 
 ## Daily habits
 
@@ -108,6 +115,7 @@ npm start -- --port 3000 --persist-to .wrangler/state --env-file .dev.vars
 # In another terminal, after local seeding:
 npm run test:integration
 npm run test:habits
+npm run test:japa
 
 # Optional first-account test, ONLY on disposable local data:
 npm run seed:clear

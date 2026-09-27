@@ -8,7 +8,7 @@ export const dateSchema = z
     return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
   }, 'Use a valid calendar date.');
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-  optionalTime = time.nullable().optional();
+  optionalTime = z.preprocess((value) => (value === '' ? null : value), time.nullable().optional());
 const text = z.string().trim().max(10000).default(''),
   title = z.string().trim().min(1).max(300),
   minutes = z.number().min(0).max(1440),

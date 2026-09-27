@@ -25,6 +25,19 @@ import { schemas, settingsSchema, dateSchema } from '../lib/domain/validation';
 const d = '2026-09-24',
   entry = (x: Partial<Entry>): Entry => ({ id: crypto.randomUUID(), date: d, ...x });
 describe('real-world entry boundaries', () => {
+  it('allows blank optional times in wake-up and session forms', () => {
+    expect(
+      schemas.wake.parse({ date: d, actualTime: '06:15', sleepTime: '' }).sleepTime,
+    ).toBeNull();
+    expect(
+      schemas.japa.parse({ date: d, rounds: 3, startTime: '', endTime: '' }).startTime,
+    ).toBeNull();
+    expect(
+      schemas.krishna.safeParse({ date: d, durationMinutes: 20, startTime: '', endTime: '' })
+        .success,
+    ).toBe(true);
+    expect(schemas.wake.safeParse({ date: d, actualTime: '25:00' }).success).toBe(false);
+  });
   it('rounds minutes across the hour boundary', () => {
     expect(formatMinutes(119.8)).toBe('2h 0m');
     expect(formatClockMinutes(359.8)).toBe('06:00');

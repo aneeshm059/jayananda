@@ -14,6 +14,7 @@ import {
   ChartNoAxesCombined,
   Sprout,
   ListChecks,
+  ClipboardList,
   Compass,
   Settings2,
   LogOut,
@@ -29,6 +30,7 @@ import { onDate, totals } from '@/lib/domain/calculations';
 import { Dashboard } from './today';
 import { request } from '@/lib/client';
 import type { Habit, HabitInput, HabitCheckinInput, HabitCheckin } from '@/lib/domain/habits';
+const TodayReport = lazy(() => import('./today-report').then((m) => ({ default: m.TodayReport })));
 const HabitsPage = lazy(() => import('./habits-page').then((m) => ({ default: m.HabitsPage })));
 import { EntryForm } from './entry-form';
 import { FocusMode } from './focus-mode';
@@ -43,6 +45,7 @@ const InspirationPage = lazy(() =>
   import('./inspiration-page').then((m) => ({ default: m.InspirationPage })),
 );
 export type Actions = {
+  decrementJapa: (entry: Entry) => Promise<void>;
   saveHabit: (input: HabitInput, id?: string) => Promise<Habit>;
   checkHabit: (id: string, input: HabitCheckinInput, today: string) => Promise<HabitCheckin>;
   archiveHabit: (id: string, archived: boolean) => Promise<void>;
@@ -55,6 +58,7 @@ export type Actions = {
 };
 const nav = [
   ['', 'Today', Sun],
+  ['today-report', 'Today Report', ClipboardList],
   ['habits', 'Habit Tracker', ListChecks],
   ['japa', 'Japa', Flower2],
   ['hearing', 'Hearing', Headphones],
@@ -73,6 +77,7 @@ const nav = [
 ] as const;
 export function JournalApp() {
   const path = usePathname().split('/')[1] ?? '';
+  const isTodayPage = ['', 'habits', 'today-report'].includes(path);
   const [state, setState] = useState<AppState | null>(null),
     [date, setDate] = useState(''),
     [error, setError] = useState(''),
@@ -106,11 +111,11 @@ export function JournalApp() {
     setMobile(false);
   }, [path]);
   useEffect(() => {
-    if ((path === '' || path === 'habits') && state && date !== state.today) {
+    if (isTodayPage && state && date !== state.today) {
       setDate(state.today);
       void refresh(state.today).catch((e) => setError(e.message));
     }
-  }, [path, date, state?.today, refresh]);
+  }, [isTodayPage, date, state?.today, refresh]);
   useEffect(() => {
     if (!state) return;
     const syncDay = () => {
@@ -177,6 +182,34 @@ export function JournalApp() {
     }
   };
   const actions: Actions = {
+    decrementJapa: async (entry) => {
+      try {
+        const saved = await request<Entry>('/api/japa/decrement', 'POST', {
+          id: entry.id,
+          date: entry.date,
+          expectedRounds: entry.rounds,
+          expectedUpdatedAt: entry.updatedAt,
+        });
+        setState((previous) =>
+          previous
+            ? {
+                ...previous,
+                records: {
+                  ...previous.records,
+                  japa: previous.records.japa.map((e) => (e.id === saved.id ? saved : e)),
+                },
+              }
+            : previous,
+        );
+        setToast('One Japa round removed.');
+      } catch (e) {
+        await refresh(date).catch(() => {});
+        throw e;
+      }
+      await refresh(date).catch(() =>
+        setError('Your count was corrected. Refresh when your connection returns.'),
+      );
+    },
     saveHabit: async (input, id) => {
       const saved = await request<Habit>(
         '/api/habits' + (id ? '/' + id : ''),
@@ -252,7 +285,7 @@ export function JournalApp() {
         )}
       </main>
     );
-  const journalDate = path === '' || path === 'habits' ? state.today : date;
+  const journalDate = isTodayPage ? state.today : date;
   const r = onDate(state.records, journalDate),
     t = totals(r, state.settings);
   if (focus)
@@ -339,7 +372,7 @@ export function JournalApp() {
           </span>
           <div className="top-actions">
             <span className="private-label">Just you and your practice</span>
-            {path === '' || path === 'habits' ? (
+            {isTodayPage ? (
               <time className="automatic-date" dateTime={state.today}>
                 {prettyDate(state.today, { day: 'numeric', month: 'short' })}
               </time>
@@ -400,6 +433,8 @@ export function JournalApp() {
               </section>
             ) : path === '' ? (
               <Dashboard state={state} date={state.today} actions={actions} />
+            ) : path === 'today-report' ? (
+              <TodayReport state={state} actions={actions} />
             ) : path === 'habits' ? (
               <HabitsPage state={state} actions={actions} />
             ) : ['history', 'weekly', 'monthly'].includes(path) ? (
@@ -436,7 +471,7 @@ export function JournalApp() {
         {[
           ['', 'Today', Sun],
           ['japa', 'Japa', Flower2],
-          ['reading', 'Learn', BookOpen],
+          ['today-report', 'Report', ClipboardList],
           ['habits', 'Habits', ListChecks],
         ].map(([slug, label, Icon]) => {
           const I = Icon as typeof Sun;

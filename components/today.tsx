@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
   ArrowRight,
   Sun,
@@ -20,6 +20,7 @@ import { onDate, totals, health, dayMode, period } from '@/lib/domain/calculatio
 import { localTime, prettyDate, addDays, formatMinutes } from '@/lib/domain/dates';
 import type { Actions } from './journal-app';
 import { HabitDashboard } from './habit-checkin';
+import { JapaControls } from './japa-controls';
 import { PurposeCue } from './purpose-cue';
 export function Beads({ rounds, target }: { rounds: number; target: number }) {
   return (
@@ -72,7 +73,6 @@ export function Dashboard({
     mood = s.hero === 'morning' ? 'morning' : evening ? 'evening' : morning ? 'morning' : 'day';
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');
-  const pendingRound = useRef<string | null>(null);
   const recent = totals(period(state.records, addDays(state.today, -6), state.today), s);
   const previousDates = ['japa', 'hearing', 'reading', 'krishna', 'seva', 'reflection']
     .flatMap((key) => state.records[key as Collection].map((e) => e.date))
@@ -116,23 +116,6 @@ export function Dashboard({
                 note: 'Look back with gratitude and carry one intention forward.',
                 run: () => actions.open('reflection', r.reflection[0]),
               };
-  async function quick(rounds: number) {
-    setBusy(true);
-    try {
-      pendingRound.current ??= crypto.randomUUID();
-      await actions.save('japa', {
-        date,
-        rounds,
-        durationMinutes: 0,
-        _requestId: pendingRound.current,
-      });
-      pendingRound.current = null;
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
   const cards: [Collection, string, string, string, typeof Sun, boolean][] = [
     [
       'wake',
@@ -231,6 +214,13 @@ export function Dashboard({
           <span>HEARING · CHANTING · SERVICE</span>
         </div>
       </section>
+      <Link href="/today-report" className="today-report-link">
+        <span>
+          <strong>Today Report</strong>
+          <small>Your rounds, recorded details, and what’s still pending.</small>
+        </span>
+        <ArrowRight size={22} />
+      </Link>
       <PurposeCue state={state} actions={actions} />
       <HabitDashboard state={state} actions={actions} />
       <div className="section-heading">
@@ -297,12 +287,7 @@ export function Dashboard({
               </div>
             </div>
             <div className="card-actions">
-              <button className="button primary" onClick={() => void quick(1)} disabled={busy}>
-                <Plus size={16} /> 1 round
-              </button>
-              <button className="button secondary" onClick={() => void quick(4)} disabled={busy}>
-                + 4 rounds
-              </button>
+              <JapaControls entries={r.japa} date={date} actions={actions} />
               <button className="text-button focus-link" onClick={() => actions.focus('japa')}>
                 Enter Japa mode <ArrowRight size={16} />
               </button>

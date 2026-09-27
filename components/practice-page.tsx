@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Plus, Flower2, Moon, ArrowRight } from 'lucide-react';
 import { type AppState, type Collection } from '@/lib/domain/model';
@@ -14,6 +14,7 @@ import {
   timeMinutes,
 } from '@/lib/domain/dates';
 import { Beads } from './today';
+import { JapaControls } from './japa-controls';
 import { EntryList } from './entry-list';
 import type { Actions } from './journal-app';
 export function PracticePage({
@@ -27,9 +28,7 @@ export function PracticePage({
   date: string;
   actions: Actions;
 }) {
-  const [filter, setFilter] = useState(''),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState('');
+  const [filter, setFilter] = useState('');
   const r = onDate(state.records, date),
     v = totals(r, state.settings),
     week = totals(period(state.records, ...weekBounds(date)), state.settings),
@@ -51,24 +50,6 @@ export function PracticePage({
     .filter(
       (e) => !filter || Object.values(e).join(' ').toLowerCase().includes(filter.toLowerCase()),
     );
-  const pendingRound = useRef<string | null>(null);
-  async function quick(n: number) {
-    setBusy(true);
-    try {
-      pendingRound.current ??= crypto.randomUUID();
-      await actions.save('japa', {
-        date,
-        rounds: n,
-        durationMinutes: 0,
-        _requestId: pendingRound.current,
-      });
-      pendingRound.current = null;
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
   return (
     <>
       <div className="page-intro">
@@ -107,11 +88,6 @@ export function PracticePage({
           )}
         </div>
       </div>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
       {collection === 'japa' ? (
         <section className="japa-card standalone">
           <div className="japa-progress">
@@ -128,12 +104,7 @@ export function PracticePage({
             </div>
           </div>
           <div className="card-actions">
-            <button className="button primary" disabled={busy} onClick={() => void quick(1)}>
-              + 1 round
-            </button>
-            <button className="button secondary" disabled={busy} onClick={() => void quick(4)}>
-              + 4 rounds
-            </button>
+            <JapaControls entries={r.japa} date={date} actions={actions} />
           </div>
         </section>
       ) : null}

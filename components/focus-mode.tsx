@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Flower2, Plus, Pause, Play } from 'lucide-react';
+import { Flower2, Plus, Minus, Pause, Play } from 'lucide-react';
 import { localDate, localTime } from '@/lib/domain/dates';
 export function FocusMode({
   kind,
@@ -82,9 +82,24 @@ export function FocusMode({
       <time className="focus-clock">{clock}</time>
       <div className="focus-actions">
         {kind === 'japa' && (
-          <button className="button primary" onClick={() => setRounds((n) => n + 1)}>
-            <Plus size={19} /> Round
-          </button>
+          <>
+            <button
+              className="button secondary"
+              aria-label="Subtract one round from this session"
+              disabled={rounds === 0}
+              onClick={() => setRounds((n) => Math.max(0, n - 1))}
+            >
+              <Minus size={19} /> Round
+            </button>
+            <button
+              className="button primary"
+              aria-label="Add one round to this session"
+              disabled={rounds >= 192}
+              onClick={() => setRounds((n) => n + 1)}
+            >
+              <Plus size={19} /> Round
+            </button>
+          </>
         )}
         <button className="button secondary" onClick={toggle}>
           {paused ? <Play size={17} /> : <Pause size={17} />} {paused ? 'Resume' : 'Pause'}

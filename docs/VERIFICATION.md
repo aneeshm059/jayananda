@@ -1,4 +1,17 @@
-# Release verification — 25 September 2026
+# Release verification
+
+## Today Report and Japa corrections — 27 September 2026
+
+- TypeScript and production build passed; 74 unit tests passed. The vinext compatibility check reports 13 supported, 0 issues.
+- Local Worker + D1 integration: 40 existing journal assertions, 26 habit assertions and 16 new Japa/report assertions passed.
+- Correction checks cover authentication, per-user/date isolation, origin validation, atomic concurrent/retried subtraction, zero boundaries, persisted totals, and preservation of session notes, times, duration and attention.
+- Report checks cover today-only totals, partial targets, minimum days, zero targets, late recorded wake times, active habit date boundaries, unchecked notes, archived recorded habits and all saved form fields including selected morning practices.
+- Browser testing verified dashboard and Japa-page subtraction, the disabled control at zero, focus-session plus/minus, live report totals, wake-time quick entry with bedtime blank, and expanded morning details. Desktop and 390px phone layouts were reviewed; the phone report had no horizontal page overflow.
+- Fixed blank optional time fields blocking wake-up/Japa/Krishna Book form submissions. Invalid times remain rejected.
+
+All write tests used local sample accounts. Browser QA records were removed afterward. No database migration is required.
+
+Production verification passed 13 PWA delivery checks plus the Today Report sign-in redirect, anonymous correction rejection, and both deployed client bundles matching the tested build. Deployment version: `6aeb95e4-baef-4a77-a16a-9fb3733334d8`.
 
 ## PWA installation release
 
