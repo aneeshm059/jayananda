@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { PwaRegistration } from '@/components/pwa-registration';
 import './globals.css';
 import './companion.css';
+import './gentle.css';
 export const metadata = {
   title: 'Jayananda · My Sādhana Journey',
   description: 'A quiet companion for hearing, chanting, reading and service.',

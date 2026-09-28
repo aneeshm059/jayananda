@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, PenLine } from 'lucide-react';
-import { type AppState, type Collection, healthNote } from '@/lib/domain/model';
+import { type AppState, type Collection } from '@/lib/domain/model';
 import {
   monthBounds,
   weekBounds,
@@ -172,24 +172,36 @@ export function ReviewPage({
             onChange={(e) => setQuery(e.target.value)}
           />
           <Health value={health(selected, state.settings, dayMode(selected))} />
-          {columns.map(([key, label]) => (
-            <section className="history-section" key={key}>
-              <div className="section-heading">
-                <h3>{label}</h3>
-                <button className="text-button" onClick={() => actions.open(key as Collection)}>
-                  + Add entry
-                </button>
-              </div>
-              <EntryList
-                collection={key as Collection}
-                entries={selected[key as Collection].filter((e) =>
-                  Object.values(e).join(' ').toLowerCase().includes(query.toLowerCase()),
-                )}
-                actions={actions}
-                empty="No entry for this day. Continue from here."
-              />
-            </section>
-          ))}
+          {columns.map(([key, label]) => {
+            const entries = selected[key as Collection].filter((e) =>
+              Object.values(e).join(' ').toLowerCase().includes(query.toLowerCase()),
+            );
+            return (
+              <details
+                className="fold-panel history-section"
+                key={`${key}-${date}-${practice}-${query}`}
+                open={entries.length > 0 || practice !== 'all'}
+              >
+                <summary>
+                  {label} · {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+                </summary>
+                <div className="fold-body">
+                  <div className="section-heading">
+                    <h3>{label}</h3>
+                    <button className="text-button" onClick={() => actions.open(key as Collection)}>
+                      + Add entry
+                    </button>
+                  </div>
+                  <EntryList
+                    collection={key as Collection}
+                    entries={entries}
+                    actions={actions}
+                    empty="No entry for this day. Continue from here."
+                  />
+                </div>
+              </details>
+            );
+          })}
         </>
       ) : (
         <>
@@ -202,28 +214,7 @@ export function ReviewPage({
               label="Japa rounds"
               value={`${v.rounds} / ${days.reduce((n, d) => n + state.settings[dayMode(onDate(state.records, d))].japa, 0)}`}
             />
-            <Stat
-              label="Average attention"
-              value={v.attention ? `${v.attention.toFixed(1)} / 5` : 'Not recorded'}
-            />
             <Stat label="Early rising" value={`${v.earlyDays} / ${days.length} days`} />
-            <Stat label="Prabhupāda hearing" value={formatMinutes(v.hearing)} />
-            <Stat
-              label="Daytime reading"
-              value={`${formatMinutes(v.reading)} · ${v.readingPages} pages`}
-            />
-            <Stat label="Krishna Book" value={`${v.krishnaNights} / ${days.length} nights`} />
-            <Stat
-              label="Krishna Book reading"
-              value={`${formatMinutes(v.krishna)} · ${v.krishnaPages} pages`}
-            />
-            <Stat label="Seva" value={`${v.seva} entries`} />
-            <Stat label="Night reflections" value={`${v.reflections} / ${days.length}`} />
-            <Stat label="Association" value={formatMinutes(v.association)} />
-            <Stat
-              label="Average wake time"
-              value={v.averageWake == null ? 'Not recorded' : formatClockMinutes(v.averageWake)}
-            />
             <Stat
               label="Daily standard met"
               value={`${
@@ -234,20 +225,48 @@ export function ReviewPage({
               } days`}
             />
           </div>
-          <div className="gentle-note">
-            <p>
-              {v.krishnaNights
-                ? `You read Krishna Book on ${consistency(records, bounds[0], end)}% of elapsed evenings this ${kind === 'weekly' ? 'week' : 'month'}.`
-                : 'A few quiet pages are enough to begin.'}
-            </p>
-            {v.currentChapter && (
-              <p>
-                Current chapter in this period: {v.currentChapter} · {v.chapters} chapter
-                completions recorded.
-              </p>
-            )}
-          </div>
-          <PracticeChart records={records} settings={state.settings} days={days} />
+          <details className="fold-panel">
+            <summary>All practice totals and trends</summary>
+            <div className="fold-body">
+              <div className="stat-grid review-stats">
+                <Stat
+                  label="Average attention"
+                  value={v.attention ? `${v.attention.toFixed(1)} / 5` : 'Not recorded'}
+                />
+                <Stat label="Prabhupāda hearing" value={formatMinutes(v.hearing)} />
+                <Stat
+                  label="Daytime reading"
+                  value={`${formatMinutes(v.reading)} · ${v.readingPages} pages`}
+                />
+                <Stat label="Krishna Book" value={`${v.krishnaNights} / ${days.length} nights`} />
+                <Stat
+                  label="Krishna Book reading"
+                  value={`${formatMinutes(v.krishna)} · ${v.krishnaPages} pages`}
+                />
+                <Stat label="Seva" value={`${v.seva} entries`} />
+                <Stat label="Night reflections" value={`${v.reflections} / ${days.length}`} />
+                <Stat label="Association" value={formatMinutes(v.association)} />
+                <Stat
+                  label="Average wake time"
+                  value={v.averageWake == null ? 'Not recorded' : formatClockMinutes(v.averageWake)}
+                />
+              </div>
+              <div className="gentle-note">
+                <p>
+                  {v.krishnaNights
+                    ? `You read Krishna Book on ${consistency(records, bounds[0], end)}% of elapsed evenings this ${kind === 'weekly' ? 'week' : 'month'}.`
+                    : 'A few quiet pages are enough to begin.'}
+                </p>
+                {v.currentChapter && (
+                  <p>
+                    Current chapter in this period: {v.currentChapter} · {v.chapters} chapter
+                    completions recorded.
+                  </p>
+                )}
+              </div>
+              <PracticeChart records={records} settings={state.settings} days={days} />
+            </div>
+          </details>
           <section className="panel review-writing">
             <h2>A moment to reflect</h2>
             <p>What will you carry into the next {kind === 'weekly' ? 'week' : 'month'}?</p>

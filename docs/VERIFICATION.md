@@ -1,5 +1,14 @@
 # Release verification
 
+## Gentle companion redesign — 28 September 2026
+
+- TypeScript, production build and 79 unit tests passed, including five tests for honest practice-garden activity, dates, zero corrections and habit check-ins.
+- Browser checks covered the dashboard practice switcher, Habit/Reflect tabs, arrow-key tab navigation, grouped phone navigation, expanded weekly statistics, purpose/quality access, quick-start anchor, Japa add/subtract and saved-effort feedback.
+- Desktop and 390px phone layouts were visually reviewed. Both 320px and 390px checks found no horizontal page overflow. Temporary browser viewport changes were reset and the single local QA entry removed.
+- All original forms, API routes, database schema, exports, reports and PWA assets are preserved. Primary actions remain visible; secondary statistics and histories use labelled expandable sections. The garden uses existing saved data and has no new persistence or service dependency.
+
+Production: all 13 PWA delivery checks passed; the new stylesheet and dashboard bundle match the tested build. Deployment version: `b549ab6a-0c57-482d-9ffd-baf216a1822a`.
+
 ## Today Report and Japa corrections — 27 September 2026
 
 - TypeScript and production build passed; 74 unit tests passed. The vinext compatibility check reports 13 supported, 0 issues.

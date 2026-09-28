@@ -39,15 +39,18 @@ export function InspirationPage({
         <Link href="/" className="button primary">
           Return to my practice <ArrowRight size={16} />
         </Link>
-        <div className="purpose-goals">
-          <div className="section-heading">
-            <h2>Personal intentions</h2>
-            <button className="text-button" onClick={() => actions.open('goals')}>
-              + Add intention
-            </button>
+        <details className="fold-panel purpose-goals">
+          <summary>Personal intentions</summary>
+          <div className="fold-body">
+            <div className="section-heading">
+              <h2>Personal intentions</h2>
+              <button className="text-button" onClick={() => actions.open('goals')}>
+                + Add intention
+              </button>
+            </div>
+            <EntryList collection="goals" entries={state.records.goals} actions={actions} />
           </div>
-          <EntryList collection="goals" entries={state.records.goals} actions={actions} />
-        </div>
+        </details>
       </section>
     );
   if (kind === 'jayananda')
@@ -70,24 +73,39 @@ export function InspirationPage({
             <PenLine size={17} /> How did I practice this today?
           </button>
         </section>
-        <div className="qualities-grid">
-          {qualities.map((q) => (
-            <button
-              className={q === s.quality ? 'active' : ''}
-              key={q}
-              onClick={() => actions.open('quality', { quality: q })}
-            >
-              {q}
-              <ArrowRight size={15} />
-            </button>
-          ))}
-        </div>
-        <p className="fine-print source-note">
-          These are personal reflection prompts, not quotations or biographical claims. Verified
-          stories and source references can be added later.
-        </p>
+        <details className="fold-panel">
+          <summary>Explore other qualities</summary>
+          <div className="fold-body">
+            <div className="qualities-grid">
+              {qualities.map((q) => (
+                <button
+                  className={q === s.quality ? 'active' : ''}
+                  key={q}
+                  onClick={() => actions.open('quality', { quality: q })}
+                >
+                  {q}
+                  <ArrowRight size={15} />
+                </button>
+              ))}
+            </div>
+            <p className="fine-print source-note">
+              These are personal reflection prompts, not quotations or biographical claims. Verified
+              stories and source references can be added later.
+            </p>
+          </div>
+        </details>
         <h2>Reflections on service</h2>
-        <EntryList collection="quality" entries={state.records.quality} actions={actions} />
+        <EntryList collection="quality" entries={r.quality} actions={actions} />
+        <details className="fold-panel">
+          <summary>Past reflections on service</summary>
+          <div className="fold-body">
+            <EntryList
+              collection="quality"
+              entries={state.records.quality.filter((entry) => entry.date !== date)}
+              actions={actions}
+            />
+          </div>
+        </details>
       </>
     );
   const week = totals(period(state.records, ...weekBounds(date)), s),
@@ -112,14 +130,6 @@ export function InspirationPage({
         </h1>
         <p>Carry one instruction into the ordinary moments of your day.</p>
       </div>
-      <div className="stat-grid">
-        <Stat label="Association · Today" value={formatMinutes(v.prabhupada)} />
-        <Stat label="Association · This week" value={formatMinutes(week.prabhupada)} />
-        <Stat label="Association · This month" value={formatMinutes(month.prabhupada)} />
-      </div>
-      <p className="fine-print">
-        Time spent hearing Śrīla Prabhupāda and reading his books, including Krishna Book.
-      </p>
       <section className="panel">
         <h2>Today’s connection</h2>
         <div className="connection-list">
@@ -137,7 +147,30 @@ export function InspirationPage({
           <PenLine size={17} /> An instruction, a reflection, a prayer
         </button>
       </section>
-      <EntryList collection="prabhupada" entries={state.records.prabhupada} actions={actions} />
+      <EntryList collection="prabhupada" entries={r.prabhupada} actions={actions} />
+      <details className="fold-panel">
+        <summary>Association totals</summary>
+        <div className="fold-body">
+          <div className="stat-grid">
+            <Stat label="Association · Today" value={formatMinutes(v.prabhupada)} />
+            <Stat label="Association · This week" value={formatMinutes(week.prabhupada)} />
+            <Stat label="Association · This month" value={formatMinutes(month.prabhupada)} />
+          </div>
+          <p className="fine-print">
+            Time spent hearing Śrīla Prabhupāda and reading his books, including Krishna Book.
+          </p>
+        </div>
+      </details>
+      <details className="fold-panel">
+        <summary>Past reflections and prayers</summary>
+        <div className="fold-body">
+          <EntryList
+            collection="prabhupada"
+            entries={state.records.prabhupada.filter((entry) => entry.date !== date)}
+            actions={actions}
+          />
+        </div>
+      </details>
       <p className="fine-print source-note">
         Your personal recollections are kept as journal entries. No unsourced quotations are
         presented as verified teachings.

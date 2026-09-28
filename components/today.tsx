@@ -10,14 +10,17 @@ import {
   HeartHandshake,
   PenLine,
   Flower2,
-  Plus,
   Check,
+  ChevronLeft,
   ChevronRight,
   Sprout,
+  Users,
+  ClipboardList,
 } from 'lucide-react';
 import { type AppState, type Collection, defaultSankalpa, healthNote } from '@/lib/domain/model';
 import { onDate, totals, health, dayMode, period } from '@/lib/domain/calculations';
 import { localTime, prettyDate, addDays, formatMinutes } from '@/lib/domain/dates';
+import { practiceGarden } from '@/lib/domain/practice-garden';
 import type { Actions } from './journal-app';
 import { HabitDashboard } from './habit-checkin';
 import { JapaControls } from './japa-controls';
@@ -53,6 +56,31 @@ export function Health({ value }: { value: number }) {
     </div>
   );
 }
+const practices = [
+  { key: 'japa', label: 'Japa', icon: Flower2, note: 'One round. A little more presence.' },
+  { key: 'wake', label: 'Morning', icon: Sun, note: 'A fresh beginning, at your own pace.' },
+  {
+    key: 'hearing',
+    label: 'Hearing',
+    icon: Headphones,
+    note: 'Carry one instruction into your day.',
+  },
+  {
+    key: 'reading',
+    label: 'Reading',
+    icon: BookOpen,
+    note: 'A few attentive pages can stay with you.',
+  },
+  { key: 'krishna', label: 'Krishna Book', icon: Moon, note: 'End the day remembering Krishna.' },
+  { key: 'seva', label: 'Seva', icon: HeartHandshake, note: 'Small acts. A sincere heart.' },
+  {
+    key: 'association',
+    label: 'Association',
+    icon: Users,
+    note: 'Remember what you received in good company.',
+  },
+] as const;
+const tabs = ['Practice', 'Habits', 'Reflect'] as const;
 export function Dashboard({
   state,
   date,
@@ -68,353 +96,391 @@ export function Dashboard({
     mode = dayMode(r),
     target = s[mode];
   const time = localTime(s.timezone),
-    evening = time >= s.eveningStart || time < '04:00',
-    morning = time < '10:00' && time >= '04:00',
-    mood = s.hero === 'morning' ? 'morning' : evening ? 'evening' : morning ? 'morning' : 'day';
+    evening = time >= s.eveningStart || time < '04:00';
+  const [tab, setTab] = useState<(typeof tabs)[number]>('Practice');
+  const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');
   const recent = totals(period(state.records, addDays(state.today, -6), state.today), s);
-  const previousDates = ['japa', 'hearing', 'reading', 'krishna', 'seva', 'reflection']
-    .flatMap((key) => state.records[key as Collection].map((e) => e.date))
-    .filter((d) => d < state.today)
-    .sort();
-  const lastPractice = previousDates.at(-1);
-  const welcomeBack =
-    lastPractice &&
-    lastPractice < addDays(state.today, -1) &&
-    !v.rounds &&
-    !v.hearing &&
-    !v.reading &&
-    !v.krishna;
-  const nextStep =
-    evening && v.krishna < target.krishna
-      ? {
-          label: v.krishna ? 'Continue Krishna Book' : 'Begin Krishna Book',
-          note: 'End the day with a little remembrance.',
-          run: () => actions.focus('krishna'),
-        }
-      : v.rounds < target.japa
-        ? {
-            label: v.rounds ? 'Continue my Japa' : 'Begin Japa',
-            note: 'Put distractions aside. Begin with one attentive round.',
-            run: () => actions.focus('japa'),
-          }
-        : v.hearing < target.hearing
-          ? {
-              label: 'Make time for hearing',
-              note: 'Carry one instruction into the rest of your day.',
-              run: () => actions.open('hearing'),
-            }
-          : v.reading < target.reading
-            ? {
-                label: 'Read a few pages',
-                note: 'A little attentive reading is a meaningful beginning.',
-                run: () => actions.open('reading'),
-              }
-            : {
-                label: v.reflections ? 'Return to my reflection' : 'Offer a few sincere lines',
-                note: 'Look back with gratitude and carry one intention forward.',
-                run: () => actions.open('reflection', r.reflection[0]),
-              };
-  const cards: [Collection, string, string, string, typeof Sun, boolean][] = [
-    [
-      'wake',
-      'Wake up',
-      r.wake[0]?.actualTime ? String(r.wake[0].actualTime) : 'A fresh beginning',
-      `Target ${s.wakeTarget}`,
-      Sun,
-      !!r.wake[0]?.actualTime,
-    ],
-    [
-      'wake',
-      'Morning program',
-      r.wake[0]?.programCompleted ? 'A morning offered' : 'Make a little space',
-      s.morningProgram.join(' · '),
-      Flower2,
-      !!r.wake[0]?.programCompleted,
-    ],
-    [
-      'hearing',
-      'Prabhupāda hearing',
-      `${v.hearing} / ${target.hearing} min`,
-      'Take a few minutes for hearing.',
-      Headphones,
-      v.hearing >= target.hearing,
-    ],
-    [
-      'reading',
-      'Daytime reading',
-      `${v.reading} / ${target.reading} min`,
-      'A few attentive pages.',
-      BookOpen,
-      v.reading >= target.reading,
-    ],
-    [
-      'seva',
-      'Seva',
-      v.seva
-        ? `${v.seva} service ${v.seva === 1 ? 'entry' : 'entries'}`
-        : 'An opportunity to serve',
-      'Small acts. A sincere heart.',
-      HeartHandshake,
-      v.seva > 0,
-    ],
-    [
-      'reflection',
-      'Night reflection',
-      r.daily[0]?.closed
-        ? 'Today has been offered'
-        : v.reflections
-          ? 'Reflection recorded'
-          : 'A few sincere lines',
-      'Look back with gratitude.',
-      PenLine,
-      v.reflections > 0,
-    ],
-  ];
+  const garden = practiceGarden(state);
+  const current = practices[index];
+  const recorded = (key: Collection) => (key === 'japa' ? v.rounds > 0 : r[key].length > 0);
+  function move(delta: number) {
+    setIndex((n) => (n + delta + practices.length) % practices.length);
+  }
   return (
-    <>
-      <section className={`hero hero-${mood} hero-${s.hero}`}>
-        <picture>
-          <source media="(max-width: 600px)" srcSet="/hero-mobile.webp" />
-          <img
-            src="/hero.webp"
-            alt=""
-            className="hero-image"
-            fetchPriority="high"
-            width="1440"
-            height="640"
-          />
-        </picture>
-        <div className="hero-shade" />
-        <div className="hero-copy">
-          <span className="hero-date">{prettyDate(date)}</span>
-          <h1>{evening ? 'Complete the day peacefully.' : `Hare Krishna, ${s.name}.`}</h1>
-          <p className="hero-welcome">
-            {welcomeBack ? 'Welcome back. Begin again with one small practice.' : nextStep.note}
-          </p>
-          <div className="hero-intention">
-            <button
-              className="eyebrow"
-              onClick={() => actions.open('sankalpa', r.sankalpa[0] ?? { text: defaultSankalpa })}
-            >
-              TODAY’S SANKALPA <PenLine size={12} />
-            </button>
-            <p>“{r.sankalpa[0]?.text || defaultSankalpa}”</p>
-          </div>
-          <div className="hero-actions">
-            <button className="button cream" onClick={nextStep.run}>
-              {evening ? <Moon size={17} /> : <Flower2 size={18} />} {nextStep.label}
-              <ArrowRight size={17} />
-            </button>
+    <div className="companion-home">
+      <section className={'welcome-card welcome-' + s.hero}>
+        <div className="welcome-copy">
+          <span className="eyebrow">{prettyDate(date)} · YOUR QUIET CORNER</span>
+          <h1>
+            Hare Krishna, {s.name}.<br />
+            <span>{evening ? 'Come back to yourself.' : 'A little space to grow.'}</span>
+          </h1>
+          <p>No need to do everything at once. Begin with one small practice.</p>
+          <div className="welcome-actions">
+            <a href="#tab-Practice" className="button primary" onClick={() => setTab('Practice')}>
+              Begin a moment <ArrowRight size={16} />
+            </a>
+            <Link href="/today-report" className="text-button">
+              <ClipboardList size={16} /> Today Report
+            </Link>
           </div>
         </div>
-        <div className="hero-corner">
-          {evening ? 'A QUIET ENDING' : 'A SINCERE BEGINNING'}
-          <span>HEARING · CHANTING · SERVICE</span>
+        <div className="welcome-art" aria-hidden="true">
+          <img src="/hero-mobile.webp" alt="" width="640" height="640" />
+          <span>HEAR · CHANT · REMEMBER</span>
         </div>
       </section>
-      <Link href="/today-report" className="today-report-link">
-        <span>
-          <strong>Today Report</strong>
-          <small>Your rounds, recorded details, and what’s still pending.</small>
-        </span>
-        <ArrowRight size={22} />
-      </Link>
-      <PurposeCue state={state} actions={actions} />
-      <HabitDashboard state={state} actions={actions} />
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">ONE PRACTICE AT A TIME</p>
-          <h2>Today’s sādhana</h2>
+      <section className="practice-garden" aria-label="Your practice garden, last seven days">
+        <div className="garden-copy">
+          <span className="garden-emblem">
+            <Sprout size={24} />
+          </span>
+          <div>
+            <h2>
+              {garden.today ? 'A little effort. A little growth.' : 'Your next little beginning.'}
+            </h2>
+            <p>
+              {garden.days
+                ? `You made space for practice on ${garden.days} of the last 7 days.`
+                : 'Every sincere return helps your practice grow.'}
+            </p>
+          </div>
         </div>
-        <div className="mode-switch" aria-label="Daily standard">
-          {(['ideal', 'minimum'] as const).map((m) => (
-            <button
-              key={m}
-              className={mode === m ? 'selected' : ''}
-              aria-pressed={mode === m}
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                try {
-                  await actions.save('daily', { date, mode: m, closed: !!r.daily[0]?.closed });
-                } catch (e) {
-                  setError((e as Error).message);
-                } finally {
-                  setBusy(false);
-                }
-              }}
+        <div className="garden-days">
+          {garden.week.map((day) => (
+            <div
+              className={
+                'garden-day ' +
+                (day.active ? 'bloomed ' : '') +
+                (day.date === date ? 'is-today' : '')
+              }
+              key={day.date}
+              title={`${prettyDate(day.date)}: ${day.active ? 'Practice recorded' : 'No practice recorded'}`}
             >
-              {m === 'ideal' ? 'Ideal day' : 'Minimum day'}
+              <span
+                aria-label={`${prettyDate(day.date)}: ${day.active ? 'Practice recorded' : 'No practice recorded'}`}
+              >
+                {day.active ? <Flower2 size={24} /> : <span className="garden-seed" />}
+              </span>
+              <small>{prettyDate(day.date, { weekday: 'narrow' })}</small>
+            </div>
+          ))}
+        </div>
+      </section>
+      <div className="companion-tabs" role="tablist" aria-label="Today’s space">
+        {tabs.map((name, i) => (
+          <button
+            key={name}
+            id={'tab-' + name}
+            role="tab"
+            aria-selected={tab === name}
+            aria-controls={'panel-' + name}
+            tabIndex={tab === name ? 0 : -1}
+            onClick={() => setTab(name)}
+            onKeyDown={(event) => {
+              const next =
+                event.key === 'ArrowRight'
+                  ? (i + 1) % tabs.length
+                  : event.key === 'ArrowLeft'
+                    ? (i + tabs.length - 1) % tabs.length
+                    : event.key === 'Home'
+                      ? 0
+                      : event.key === 'End'
+                        ? tabs.length - 1
+                        : -1;
+              if (next >= 0) {
+                event.preventDefault();
+                setTab(tabs[next]);
+                document.getElementById('tab-' + tabs[next])?.focus();
+              }
+            }}
+          >
+            {name === 'Practice' ? (
+              <Flower2 size={17} />
+            ) : name === 'Habits' ? (
+              <Check size={17} />
+            ) : (
+              <PenLine size={17} />
+            )}{' '}
+            {name}
+          </button>
+        ))}
+      </div>
+      <section
+        className="companion-panel"
+        id="panel-Practice"
+        role="tabpanel"
+        aria-labelledby="tab-Practice"
+        hidden={tab !== 'Practice'}
+      >
+        <div className="practice-picker" aria-label="Choose a practice">
+          {practices.map((practice, i) => (
+            <button key={practice.key} aria-pressed={i === index} onClick={() => setIndex(i)}>
+              <practice.icon size={18} />
+              {practice.label}
+              {recorded(practice.key) && <Check className="picker-check" size={12} />}
             </button>
           ))}
         </div>
-      </div>
-      {mode === 'minimum' && (
-        <p className="gentle-note">A simpler rhythm for a demanding day. Continue from here.</p>
-      )}
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      <div className="daily-layout">
-        <div className="practice-column">
-          <section className="japa-card">
-            <div className="card-heading">
-              <div className="icon-label">
-                <span className="icon-tile">
-                  <Flower2 size={22} />
-                </span>
-                <div>
-                  <span className="eyebrow">THE HEART OF YOUR DAY</span>
-                  <h3>Japa</h3>
-                </div>
-              </div>
-              <Link href="/japa" className="text-button">
-                View sessions <ChevronRight size={15} />
-              </Link>
-            </div>
-            <div className="japa-progress">
-              <Beads rounds={v.rounds} target={target.japa} />
-              <div className="round-total">
-                <strong>{v.rounds}</strong>
-                <span>
-                  / {target.japa}
-                  <small>ROUNDS</small>
-                </span>
-              </div>
-            </div>
-            <div className="card-actions">
-              <JapaControls entries={r.japa} date={date} actions={actions} />
-              <button className="text-button focus-link" onClick={() => actions.focus('japa')}>
-                Enter Japa mode <ArrowRight size={16} />
+        <div className="practice-deck">
+          <div className="deck-heading">
+            <span className="eyebrow">A MOMENT FOR {current.label.toUpperCase()}</span>
+            <div>
+              <span>
+                {index + 1} / {practices.length}
+              </span>
+              <button
+                className="icon-button"
+                aria-label="Previous practice"
+                onClick={() => move(-1)}
+              >
+                <ChevronLeft size={19} />
+              </button>
+              <button className="icon-button" aria-label="Next practice" onClick={() => move(1)}>
+                <ChevronRight size={19} />
               </button>
             </div>
-          </section>
-          <div className="practice-grid">
-            {cards.map(([key, title, value, note, Icon, done], i) => (
-              <button
-                className="practice-card"
-                key={title}
-                onClick={() =>
-                  actions.open(
-                    key,
-                    key === 'wake' ? r.wake[0] : key === 'reflection' ? r.reflection[0] : undefined,
-                  )
-                }
-              >
-                <div className="practice-card-top">
-                  <span className={'icon-tile tone-' + i}>
-                    <Icon size={20} />
-                  </span>
-                  <span className={'status ' + (done ? 'done' : '')}>
-                    {done ? (
+          </div>
+          {practices.map((practice, i) => (
+            <div
+              key={practice.key}
+              className={'deck-card deck-' + practice.key}
+              hidden={i !== index}
+            >
+              <span className="deck-icon">
+                <practice.icon size={30} />
+              </span>
+              <h2>{practice.label === 'Morning' ? 'A gentle start.' : practice.label}</h2>
+              <p className="deck-note">{practice.note}</p>
+              {practice.key === 'japa' ? (
+                <>
+                  <div className="deck-rounds" aria-live="polite">
+                    <strong>{v.rounds}</strong>
+                    <span>of {target.japa} rounds</span>
+                  </div>
+                  <Beads rounds={v.rounds} target={target.japa} />
+                  <JapaControls entries={r.japa} date={date} actions={actions} />
+                  <div className="deck-links">
+                    <button className="text-button" onClick={() => actions.focus('japa')}>
+                      Enter Japa mode <ArrowRight size={16} />
+                    </button>
+                    <Link className="text-button" href="/japa">
+                      Sessions & details
+                    </Link>
+                  </div>
+                </>
+              ) : practice.key === 'wake' ? (
+                <>
+                  <div className="morning-mini">
+                    <button onClick={() => actions.open('wake', r.wake[0])}>
+                      <Sun size={20} />
+                      <strong>
+                        {r.wake[0]?.actualTime ? String(r.wake[0].actualTime) : 'Record wake-up'}
+                      </strong>
+                      <small>Wake-up · target {s.wakeTarget}</small>
+                    </button>
+                    <button onClick={() => actions.open('wake', r.wake[0])}>
+                      <Flower2 size={20} />
+                      <strong>
+                        {r.wake[0]?.programCompleted ? 'Morning offered' : 'Morning program'}
+                      </strong>
+                      <small>{s.morningProgram.join(' · ')}</small>
+                    </button>
+                  </div>
+                  <p className="deck-footnote">Your morning details stay together in one entry.</p>
+                </>
+              ) : (
+                <>
+                  <div className="deck-metric">
+                    {practice.key === 'seva' ? (
                       <>
-                        <Check size={12} /> Recorded
+                        <strong>{v.seva}</strong>
+                        <span>service {v.seva === 1 ? 'entry' : 'entries'}</span>
                       </>
                     ) : (
-                      '○ Open'
+                      <>
+                        <strong>{formatMinutes(v[practice.key])}</strong>
+                        <span>
+                          {practice.key === 'association'
+                            ? 'of connection today'
+                            : `of ${target[practice.key]} min today`}
+                        </span>
+                      </>
                     )}
-                  </span>
-                </div>
-                <h3>{title}</h3>
-                <strong>{value}</strong>
-                <p>{note}</p>
-                <span className="card-arrow">
-                  <Plus size={16} />
-                </span>
+                  </div>
+                  <div className="deck-primary-actions">
+                    {practice.key === 'krishna' && (
+                      <button className="button primary" onClick={() => actions.focus('krishna')}>
+                        <Moon size={17} /> Begin night reading
+                      </button>
+                    )}
+                    <button
+                      className={'button ' + (practice.key === 'krishna' ? 'secondary' : 'primary')}
+                      onClick={() => actions.open(practice.key)}
+                    >
+                      Record {practice.label.toLowerCase()} <ArrowRight size={16} />
+                    </button>
+                  </div>
+                  <Link className="text-button" href={'/' + practice.key}>
+                    Sessions & details <ChevronRight size={15} />
+                  </Link>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="rhythm-bar">
+          <span>A rhythm that fits today</span>
+          <div className="mode-switch" aria-label="Daily standard">
+            {(['ideal', 'minimum'] as const).map((m) => (
+              <button
+                key={m}
+                aria-pressed={mode === m}
+                className={mode === m ? 'selected' : ''}
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  setError('');
+                  try {
+                    await actions.save('daily', { date, mode: m, closed: !!r.daily[0]?.closed });
+                  } catch (e) {
+                    setError((e as Error).message);
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                {m === 'ideal' ? 'Ideal day' : 'Minimum day'}
               </button>
             ))}
           </div>
         </div>
-        <aside className="today-aside">
-          <section className="night-card">
-            <div className="night-stars">
-              ✧ <Moon size={27} /> ✧
-            </div>
-            <span className="eyebrow">{evening ? 'TONIGHT' : 'WHEN EVENING COMES'}</span>
-            <h2>Krishna Book</h2>
-            <span className="night-subtitle">Night Reading</span>
-            <p>
-              End the day
-              <br />
-              remembering Krishna.
-            </p>
-            <div className="night-progress">
-              <span>
-                {v.krishna ? `✓ ${v.krishna} minutes recorded` : '○ A quiet moment awaits'}
-              </span>
-              <small>YOUR INTENTION · {target.krishna} MINUTES</small>
-            </div>
-            <button className="button cream wide" onClick={() => actions.focus('krishna')}>
-              {v.krishna ? 'Continue reading' : 'Begin night reading'}
-              <ArrowRight size={16} />
-            </button>
-            <button className="text-button" onClick={() => actions.open('krishna')}>
-              Log a reading session
-            </button>
-          </section>
-          <section className="quality-card">
-            <Sprout size={22} />
-            <p className="eyebrow">QUALITY OF THE WEEK</p>
-            <h3>{s.quality}</h3>
-            <p>This week I want to consciously practice {s.quality.toLowerCase()}.</p>
+        {mode === 'minimum' && (
+          <p className="gentle-note">A simpler rhythm for a demanding day. Continue from here.</p>
+        )}
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+      </section>
+      <section
+        className="companion-panel"
+        id="panel-Habits"
+        role="tabpanel"
+        aria-labelledby="tab-Habits"
+        hidden={tab !== 'Habits'}
+      >
+        <HabitDashboard state={state} actions={actions} />
+      </section>
+      <section
+        className="companion-panel reflection-space"
+        id="panel-Reflect"
+        role="tabpanel"
+        aria-labelledby="tab-Reflect"
+        hidden={tab !== 'Reflect'}
+      >
+        <div className="reflection-pair">
+          <article className="reflection-tile">
+            <PenLine size={24} />
+            <span className="eyebrow">TODAY’S SANKALPA</span>
+            <h2>Carry one intention.</h2>
+            <p>“{r.sankalpa[0]?.text || defaultSankalpa}”</p>
             <button
               className="text-button"
-              onClick={() => actions.open('quality', { quality: s.quality })}
+              onClick={() => actions.open('sankalpa', r.sankalpa[0] ?? { text: defaultSankalpa })}
             >
-              A moment to reflect <ArrowRight size={15} />
+              Edit my intention <ArrowRight size={16} />
             </button>
-          </section>
-          <Health value={health(r, s, mode)} />
-        </aside>
-      </div>
-      {state.records.reminders.some((e) => e.enabled) && (
-        <section className="gentle-reminders">
-          <h3>Gentle cues for today</h3>
-          {state.records.reminders
-            .filter((e) => e.enabled)
-            .map((e) => (
-              <p key={e.id}>
-                <time>{String(e.time)}</time> {String(e.message)}
-              </p>
-            ))}
-        </section>
-      )}
-      <section className="recent-encouragement">
-        <div>
-          <p className="eyebrow">THE LAST SEVEN DAYS</p>
-          <h2>Your small efforts matter.</h2>
-          <p>
-            {recent.krishnaNights
-              ? `You made time for Krishna Book on ${recent.krishnaNights} ${recent.krishnaNights === 1 ? 'evening' : 'evenings'}.`
-              : recent.rounds
-                ? `You recorded ${recent.rounds} rounds of Japa. Keep making space to hear.`
-                : 'Your journey can begin with one small practice today.'}
-          </p>
+          </article>
+          <article className="reflection-tile lavender">
+            <Moon size={24} />
+            <span className="eyebrow">A QUIET ENDING</span>
+            <h2>{r.daily[0]?.closed ? 'Today has been offered.' : 'A few sincere lines.'}</h2>
+            <p>
+              {v.reflections
+                ? 'Your reflection is here whenever you want to return.'
+                : 'Look back with gratitude. Let the day settle.'}
+            </p>
+            <button
+              className="button primary"
+              onClick={() => actions.open('reflection', r.reflection[0])}
+            >
+              {v.reflections ? 'Read my reflection' : 'Reflect & offer the day'}{' '}
+              <ArrowRight size={16} />
+            </button>
+          </article>
         </div>
-        <div className="recent-practice-facts">
-          <span>
-            <strong>{recent.rounds}</strong> Japa rounds
-          </span>
-          <span>
-            <strong>{formatMinutes(recent.hearing)}</strong> hearing
-          </span>
-          <Link href="/weekly" className="text-button">
-            Reflect on my week <ArrowRight size={16} />
-          </Link>
-        </div>
+        <details className="fold-panel">
+          <summary>
+            My purpose & quality of the week <Sprout size={18} />
+          </summary>
+          <div className="fold-body">
+            <PurposeCue state={state} actions={actions} />
+            <section className="quality-card">
+              <Sprout size={22} />
+              <p className="eyebrow">QUALITY OF THE WEEK</p>
+              <h3>{s.quality}</h3>
+              <p>This week I want to consciously practice {s.quality.toLowerCase()}.</p>
+              <button
+                className="text-button"
+                onClick={() => actions.open('quality', { quality: s.quality })}
+              >
+                A moment to reflect <ArrowRight size={15} />
+              </button>
+            </section>
+          </div>
+        </details>
       </section>
-      <div className="closing-note">
-        <Flower2 size={20} />
-        <p>
-          Little by little, day by day.
-          <br />
-          <span>Let your practice be the place you return to.</span>
-        </p>
-      </div>
-    </>
+      <details className="fold-panel home-details">
+        <summary>
+          Your journey, a little deeper <span>Progress, reminders & encouragement</span>
+        </summary>
+        <div className="fold-body">
+          <Health value={health(r, s, mode)} />
+          <section className="recent-encouragement">
+            <div>
+              <p className="eyebrow">THE LAST SEVEN DAYS</p>
+              <h2>Your small efforts matter.</h2>
+              <p>
+                {recent.krishnaNights
+                  ? `You made time for Krishna Book on ${recent.krishnaNights} ${recent.krishnaNights === 1 ? 'evening' : 'evenings'}.`
+                  : recent.rounds
+                    ? `You recorded ${recent.rounds} rounds of Japa. Keep making space to hear.`
+                    : 'Your journey can begin with one small practice today.'}
+              </p>
+            </div>
+            <div className="recent-practice-facts">
+              <span>
+                <strong>{recent.rounds}</strong> Japa rounds
+              </span>
+              <span>
+                <strong>{formatMinutes(recent.hearing)}</strong> hearing
+              </span>
+              <Link href="/weekly" className="text-button">
+                Reflect on my week <ArrowRight size={16} />
+              </Link>
+            </div>
+          </section>
+          {state.records.reminders.some((e) => e.enabled) && (
+            <section className="gentle-reminders">
+              <h3>Gentle cues for today</h3>
+              {state.records.reminders
+                .filter((e) => e.enabled)
+                .map((e) => (
+                  <p key={e.id}>
+                    <time>{String(e.time)}</time> {String(e.message)}
+                  </p>
+                ))}
+            </section>
+          )}
+        </div>
+      </details>
+      <p className="companion-signoff">
+        <Flower2 size={16} /> Little by little, day by day.
+      </p>
+    </div>
   );
 }

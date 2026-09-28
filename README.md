@@ -6,7 +6,7 @@ Live: [jayananda.aneeshm059.workers.dev](https://jayananda.aneeshm059.workers.de
 
 ## Version 1
 
-- Time-aware cinematic Today page, daily sankalpa, configurable morning program and wake discipline.
+- Compact Today space with Practice/Habits/Reflect tabs, a practice card switcher, daily sankalpa, configurable morning program and wake discipline.
 - Japa beads, −1/+1/+4 logging, full sessions, attention reflections and a distraction-free timer.
 - Today Report with automatic date, saved details, daily target progress and pending habit check-ins.
 - Hearing, daytime reading, separate Krishna Book night reading/timer, seva and association.
@@ -17,9 +17,15 @@ Live: [jayananda.aneeshm059.workers.dev](https://jayananda.aneeshm059.workers.de
 - Onboarding, timezone/theme/hero settings, JSON/CSV export and password changes.
 - Responsive sidebar/mobile navigation, light/dark themes, reduced-motion support and useful empty states.
 - Custom habit commitments with daily toggles, optional Extra notes, yearly calendars and dashboard reports.
-- More readable controls, a visible daily purpose reminder, a suggested next practice and gentle weekly encouragement.
+- Warm sage/pastel styling, grouped navigation, expandable secondary details, saved-effort feedback and a seven-day practice garden. Purpose reminders and weekly encouragement remain available in labelled sections.
 
 **“This reflects consistency of practice, not spiritual advancement.”**
+
+## A calmer daily companion
+
+Today shows one practice at a time. Choose a practice chip or use Previous/Next; switch to Habits for check-ins or Reflect for sankalpa and your evening reflection. Begin a moment jumps straight to the practice controls. Purpose and quality reflections sit under Reflect; Sādhana Health, seven-day totals and reminders expand under Your journey, a little deeper. All existing pages remain in the grouped sidebar or phone More menu. Practice statistics, reviews and inspiration histories use expandable sections without removing entries or actions.
+
+The garden shows one flower for each of the last seven days with meaningful recorded practice or a followed habit. It celebrates showing up, without requiring a perfect day. Correcting the only Japa round to zero removes that day's flower unless another practice is recorded. Flowers are derived from journal data, with no new database tables or stored reward balance. Reduced-motion preferences disable the decorative transitions.
 
 ## Today Report and Japa corrections
 

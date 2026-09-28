@@ -169,7 +169,13 @@ export function JournalApp() {
     setToast(
       collection === 'reflection'
         ? 'Today has been recorded. Begin again tomorrow with sincerity.'
-        : 'Saved to your journal.',
+        : collection === 'japa' ||
+            collection === 'hearing' ||
+            collection === 'reading' ||
+            collection === 'seva' ||
+            collection === 'krishna'
+          ? 'A little effort, added to your day.'
+          : 'Saved to your journal.',
     );
   };
   const refreshAfterHabit = async () => {
@@ -229,6 +235,7 @@ export function JournalApp() {
           { 'x-habit-day': today },
         );
         await refreshAfterHabit();
+        if (input.completed === true) setToast('A small promise, kept. Saved for today.');
         return saved;
       } catch (e) {
         if ((e as Error).message.includes('new day')) void refresh().catch(() => {});
@@ -320,20 +327,45 @@ export function JournalApp() {
         </Link>
         <p className="sidebar-caption">A LITTLE SINCERITY, EVERY DAY</p>
         <nav aria-label="Main navigation">
-          {nav.map(([slug, label, Icon], i) => (
+          {nav.slice(0, 3).map(([slug, label, Icon]) => (
             <Link
               key={slug}
               href={'/' + slug}
-              className={
-                (path === slug ? 'active ' : '') +
-                (['history', 'jayananda', 'settings'].includes(slug) ? 'nav-divider' : '')
-              }
+              className={path === slug ? 'active' : ''}
               aria-current={path === slug ? 'page' : undefined}
             >
               <Icon size={18} />
               <span>{label}</span>
-              {slug === 'krishna' && !t.krishna && <span className="nav-dot" />}
             </Link>
+          ))}
+          {[
+            {
+              label: 'My practices',
+              slugs: ['japa', 'hearing', 'reading', 'krishna', 'seva', 'association'],
+            },
+            {
+              label: 'Reflect & grow',
+              slugs: ['reflection', 'jayananda', 'prabhupada', 'purpose'],
+            },
+            { label: 'My journey', slugs: ['history', 'weekly', 'monthly', 'settings'] },
+          ].map((group) => (
+            <details className="nav-group" key={group.label} open={group.slugs.includes(path)}>
+              <summary>{group.label}</summary>
+              {nav
+                .filter(([slug]) => group.slugs.includes(slug))
+                .map(([slug, label, Icon]) => (
+                  <Link
+                    key={slug}
+                    href={'/' + slug}
+                    className={path === slug ? 'active' : ''}
+                    aria-current={path === slug ? 'page' : undefined}
+                  >
+                    <Icon size={17} />
+                    <span>{label}</span>
+                    {slug === 'krishna' && !t.krishna && <span className="nav-dot" />}
+                  </Link>
+                ))}
+            </details>
           ))}
         </nav>
         <div className="sidebar-foot">

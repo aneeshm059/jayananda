@@ -108,104 +108,116 @@ export function PracticePage({
           </div>
         </section>
       ) : null}
-      <div className="stat-grid">
-        {collection === 'japa' ? (
-          <>
-            <Stat label="Rounds this week" value={String(week.rounds)} />
-            <Stat
-              label="Average attention this month"
-              value={month.attention ? `${month.attention.toFixed(1)} / 5` : 'Not recorded'}
-            />
-            <Stat
-              label="Average recorded session time"
-              value={formatMinutes(
-                average(
-                  state.records.japa.filter((e) => Number(e.durationMinutes) > 0),
-                  'durationMinutes',
-                ) ?? 0,
-              )}
-            />
-          </>
-        ) : key ? (
-          <>
-            <Stat label="Today" value={formatMinutes(v[key])} />
-            <Stat label="This week" value={formatMinutes(week[key])} />
-            <Stat label="This month" value={formatMinutes(month[key])} />
-          </>
-        ) : (
-          <>
-            <Stat label="Entries this month" value={String(entries.length)} />
-            <Stat label="Days recorded" value={String(new Set(entries.map((e) => e.date)).size)} />
-            <Stat label="Today" value={String(r[collection].length) + ' recorded'} />
-          </>
-        )}
-      </div>
-      {collection === 'krishna' && (
-        <div className="gentle-note">
-          <strong>
-            {week.krishnaNights} nights this week · {month.krishnaNights} nights this month
-          </strong>
-          <p>
-            {month.krishnaPages} pages · {month.chapters} chapters completed
-            {month.currentChapter ? ` · Current chapter ${month.currentChapter}` : ''}
-          </p>
-        </div>
+      {collection !== 'japa' && (
+        <Stat
+          label="Today"
+          value={key ? formatMinutes(v[key]) : String(r[collection].length) + ' recorded'}
+        />
       )}
-      {collection === 'japa' && (
-        <>
-          <div className="panel">
-            <span className="eyebrow">A LITTLE EACH DAY</span>
-            <h3>Rounds over the past two weeks</h3>
-            <div className="bar-chart">
-              {daysBetween(addDays(date, -13), date).map((d) => {
-                const n = sum(onDate(state.records, d).japa, 'rounds');
-                return (
-                  <div key={d} title={`${d}: ${n} rounds`}>
-                    <span>{n}</span>
-                    <i
-                      style={{
-                        height: `${Math.max(3, Math.min(120, (n / state.settings.ideal.japa) * 110))}px`,
-                      }}
-                    />
-                    <small>{d.slice(8)}</small>
-                  </div>
-                );
-              })}
+      <details className="fold-panel">
+        <summary>Practice totals and patterns</summary>
+        <div className="fold-body">
+          <div className="stat-grid">
+            {collection === 'japa' ? (
+              <>
+                <Stat label="Rounds this week" value={String(week.rounds)} />
+                <Stat
+                  label="Average attention this month"
+                  value={month.attention ? `${month.attention.toFixed(1)} / 5` : 'Not recorded'}
+                />
+                <Stat
+                  label="Average recorded session time"
+                  value={formatMinutes(
+                    average(
+                      state.records.japa.filter((e) => Number(e.durationMinutes) > 0),
+                      'durationMinutes',
+                    ) ?? 0,
+                  )}
+                />
+              </>
+            ) : key ? (
+              <>
+                <Stat label="This week" value={formatMinutes(week[key])} />
+                <Stat label="This month" value={formatMinutes(month[key])} />
+              </>
+            ) : (
+              <>
+                <Stat label="Entries this month" value={String(entries.length)} />
+                <Stat
+                  label="Days recorded"
+                  value={String(new Set(entries.map((e) => e.date)).size)}
+                />
+              </>
+            )}
+          </div>
+          {collection === 'krishna' && (
+            <div className="gentle-note">
+              <strong>
+                {week.krishnaNights} nights this week · {month.krishnaNights} nights this month
+              </strong>
+              <p>
+                {month.krishnaPages} pages · {month.chapters} chapters completed
+                {month.currentChapter ? ` · Current chapter ${month.currentChapter}` : ''}
+              </p>
             </div>
-          </div>
-          <div className="gentle-note">
-            <p>
-              {attentionInsight(state.records) ||
-                'Keep recording attention when it feels useful. Patterns will appear as your journal grows.'}
-            </p>
-            <p>
-              {
-                new Set(
-                  state.records.japa
-                    .filter((e) => e.startTime && timeMinutes(String(e.startTime)) < 360)
-                    .map((e) => e.date),
-                ).size
-              }{' '}
-              days with Japa beginning before 6 AM in the loaded period.
-            </p>
-            <p>
-              {
-                daysBetween(...monthBounds(date)).filter(
-                  (d) =>
-                    sum(
-                      onDate(state.records, d).japa.filter(
-                        (e) => e.endTime && String(e.endTime) <= state.settings.workStart,
-                      ),
-                      'rounds',
-                    ) >= state.settings.ideal.japa,
-                ).length
-              }{' '}
-              days with all target rounds recorded as finished before work (
-              {state.settings.workStart}). Only sessions with an end time count.
-            </p>
-          </div>
-        </>
-      )}
+          )}
+          {collection === 'japa' && (
+            <>
+              <div className="panel">
+                <span className="eyebrow">A LITTLE EACH DAY</span>
+                <h3>Rounds over the past two weeks</h3>
+                <div className="bar-chart">
+                  {daysBetween(addDays(date, -13), date).map((d) => {
+                    const n = sum(onDate(state.records, d).japa, 'rounds');
+                    return (
+                      <div key={d} title={`${d}: ${n} rounds`}>
+                        <span>{n}</span>
+                        <i
+                          style={{
+                            height: `${Math.max(3, Math.min(120, (n / state.settings.ideal.japa) * 110))}px`,
+                          }}
+                        />
+                        <small>{d.slice(8)}</small>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="gentle-note">
+                <p>
+                  {attentionInsight(state.records) ||
+                    'Keep recording attention when it feels useful. Patterns will appear as your journal grows.'}
+                </p>
+                <p>
+                  {
+                    new Set(
+                      state.records.japa
+                        .filter((e) => e.startTime && timeMinutes(String(e.startTime)) < 360)
+                        .map((e) => e.date),
+                    ).size
+                  }{' '}
+                  days with Japa beginning before 6 AM in the loaded period.
+                </p>
+                <p>
+                  {
+                    daysBetween(...monthBounds(date)).filter(
+                      (d) =>
+                        sum(
+                          onDate(state.records, d).japa.filter(
+                            (e) => e.endTime && String(e.endTime) <= state.settings.workStart,
+                          ),
+                          'rounds',
+                        ) >= state.settings.ideal.japa,
+                    ).length
+                  }{' '}
+                  days with all target rounds recorded as finished before work (
+                  {state.settings.workStart}). Only sessions with an end time count.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </details>
       <div className="section-heading">
         <h2>Your journal</h2>
         <label className="search-field">
