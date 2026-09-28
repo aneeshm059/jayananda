@@ -1,4 +1,5 @@
 'use client';
+import { LearningToday } from './learning-today';
 import Link from 'next/link';
 import { ArrowRight, Check, Circle, ClipboardList, Flower2, Sun } from 'lucide-react';
 import { collections, type AppState } from '@/lib/domain/model';
@@ -80,6 +81,7 @@ export function TodayReport({ state, actions }: { state: AppState; actions: Acti
           <p>{remaining ? `${remaining} still pending` : 'All daily items complete'}</p>
         </article>
       </div>
+      <LearningToday today={state.today} />
       <section className="report-panel" aria-labelledby="report-pending">
         <div className="report-panel-heading">
           <div>

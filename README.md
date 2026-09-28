@@ -4,6 +4,20 @@ A private devotional journal for hearing, chanting, reading and service. **Consi
 
 Live: [jayananda.aneeshm059.workers.dev](https://jayananda.aneeshm059.workers.dev). The journal requires sign-in; public source code does not expose journal data.
 
+## Three-pillar companion
+
+The companion has a chanting-first home, a saved Japa session, sequential reading linked to **PrabhupadaBooks.com**, and an embedded YouTube learning space. The local demo and production release were approved by the owner on 28 September 2026, with English-only lecture selections.
+
+- **Chant:** quiet mālā-themed session with ± rounds, optional timer, persisted unfinished session and a saved personal instruction from a lesson. Finishing is idempotent.
+- **Read:** online Bhagavad-gītā As It Is at PrabhupadaBooks.com. Beginning a session saves its book, starting verse and local date. Enter the ending chapter/verse to save a journal report and advance the next-verse bookmark together. Time and notes are optional. Chapter boundaries and grouped source pages follow that site's edition; the final verse completes the reading without silently restarting. Existing bookmarks and journal entries remain available.
+- **Hear / Learn:** 100 unique Soulful Japa videos, 21 Happiness & Pleasure sessions, and a verified English lecture from The Acharya. Independent per-course bookmarks, in-app playback, 30-minute Soulful Japa goal, explicit completion/next lesson and source-linked personal instructions. The curated Prabhupāda selection is English-only. See [catalog provenance](docs/LEARNING-SOURCES.md).
+- Save playback checkpoints every ten seconds and on pause/visibility changes. Hidden playback pauses. Watched minutes exclude paused/buffered time and large seeks; exact attention cannot be measured. Watching in the external YouTube app requires a manual bookmark. No offline video downloads.
+- Gentle rhythm cues appear **inside the app** after chosen times; these are not push notifications. Today's report separately displays actual in-app course viewing and manually entered hearing.
+- Authenticated companion data lives in an additive `companion_entries` table with optimistic version checks. Conflicting saves pause and require reload/review. JSON exports include this data. No automatic AI requests or generated spiritual advice are enabled.
+- Every original flow remains accessible under **My journal**, **Reflect & grow**, **My journey**, or the phone **More** menu.
+
+Local review: apply `npm run db:local`, seed disposable fixtures if needed, build, and run the built Worker locally with the commands below. Sample accounts contain no production journal data. Apply remote migrations and deploy only for an approved release.
+
 ## Version 1
 
 - Compact Today space with Practice/Habits/Reflect tabs, a practice card switcher, daily sankalpa, configurable morning program and wake discipline.
@@ -122,6 +136,8 @@ npm start -- --port 3000 --persist-to .wrangler/state --env-file .dev.vars
 npm run test:integration
 npm run test:habits
 npm run test:japa
+npm run test:companion
+npm run test:reading
 
 # Optional first-account test, ONLY on disposable local data:
 npm run seed:clear
@@ -161,13 +177,13 @@ Store backups privately and encrypt any off-device copy. For recovery, stop writ
 - **Missing tables:** migrate the correct local/remote DB; use the same `.wrangler/state` path for the built Worker.
 - **Sign-in/origin errors:** auth URL must match the browser origin and secrets must exist. Local testing consistently uses `http://localhost:3000`.
 - **Invitation rejected:** check the owner email/code. Registration intentionally closes after any user exists; local seeds also close it.
-- **Expired session:** sign in again; saved D1 records remain. Unsaved forms/timers do not survive a full reload.
+- **Expired session:** sign in again; saved D1 records remain. Japa resumes from its last saved checkpoint. Reading finish drafts can recover in the same browser tab; other unsaved forms must be submitted before leaving.
 - **Network failure:** retry the same form; session requests carry idempotency keys. If a save succeeded but refresh failed, the app explicitly says it was saved.
 - **Lost password:** Settings changes a known password, but email recovery is not configured. An operator must add Better Auth's verified recovery flow; do not delete the user to reset a password, since that deletes journal records.
 - **Remote errors:** check `wrangler whoami`, account/binding and `wrangler tail`. Do not log reflection content or credentials.
 
 ## Limits and Version 2
 
-Internet is required. Timers save only after Finish; reloading loses an unfinished session. Reminders are in-app cues without push/email delivery. Historical summaries use current targets/weights. Full exports are intended for a personal-sized journal. There is no email password reset, data import, account deletion UI or additional-user invitation UI. vinext is beta; upgrades require compatibility, Worker and browser checks.
+Internet is required. Japa and video playback resume from saved checkpoints; the Krishna Book timer saves on Finish. Reading happens on PrabhupadaBooks.com, and the ending verse is entered when finishing in Jayananda. Reminders are in-app cues without push/email delivery. Historical summaries use current targets/weights. Full exports are intended for a personal-sized journal. There is no email password reset, data import, account deletion UI or additional-user invitation UI. vinext is beta; upgrades require compatibility, Worker and browser checks.
 
-Suggested next steps: offline drafts, verified password recovery, import/restore, historical target snapshots, optional push reminders, book progress, a sourced quote/story library, Ekādaśī/festival calendar and a yearly PDF journal. Keep them optional and preserve a quiet practice-first experience.
+Suggested next steps: broader offline drafts, verified password recovery, import/restore, historical target snapshots, optional push reminders, more sequential books, a sourced quote/story library, Ekādaśī/festival calendar and a yearly PDF journal. Keep them optional and preserve a quiet practice-first experience.

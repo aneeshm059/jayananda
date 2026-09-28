@@ -2,6 +2,7 @@ import { authorize, safe, HttpError } from '@/lib/http';
 import { getSettings, records, list } from '@/lib/db/repository';
 import { collections, type Collection } from '@/lib/domain/model';
 import { checkins, listHabits } from '@/lib/db/habits';
+import { companionItems } from '@/lib/db/companion';
 import { localDate } from '@/lib/domain/dates';
 const cell = (v: unknown) =>
   '"' +
@@ -19,6 +20,7 @@ export const GET = (request: Request) =>
       return new Response(
         JSON.stringify(
           {
+            companion: await companionItems(user.id),
             exportedAt: new Date().toISOString(),
             settings,
             records: await records(user.id),

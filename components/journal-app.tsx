@@ -19,6 +19,7 @@ import {
   Settings2,
   LogOut,
   Plus,
+  Play,
   Menu,
   Users,
   Check,
@@ -28,6 +29,12 @@ import { type AppState, type Collection, type Entry, type Settings } from '@/lib
 import { localDate, prettyDate, addDays, monthBounds } from '@/lib/domain/dates';
 import { onDate, totals } from '@/lib/domain/calculations';
 import { Dashboard } from './today';
+import { CompanionProvider, useCompanion } from './companion-provider';
+import { PillarHome, ChantCompanion } from './pillar-home';
+import { HearingCompanion, LearningCompanion } from './learning-companion';
+import { ReadingCompanion } from './reading-companion';
+import { JapaSanctuary } from './japa-sanctuary';
+import { MalaIcon } from './mala-icon';
 import { request } from '@/lib/client';
 import type { Habit, HabitInput, HabitCheckinInput, HabitCheckin } from '@/lib/domain/habits';
 const TodayReport = lazy(() => import('./today-report').then((m) => ({ default: m.TodayReport })));
@@ -59,10 +66,12 @@ export type Actions = {
 const nav = [
   ['', 'Today', Sun],
   ['today-report', 'Today Report', ClipboardList],
+  ['journal', 'All practices', BookOpen],
+  ['learn', 'My lessons', Play],
   ['habits', 'Habit Tracker', ListChecks],
-  ['japa', 'Japa', Flower2],
-  ['hearing', 'Hearing', Headphones],
-  ['reading', 'Reading', BookOpen],
+  ['japa', 'Chant', MalaIcon],
+  ['reading', 'Read', BookOpen],
+  ['hearing', 'Hear', Headphones],
   ['krishna', 'Krishna Book', Moon],
   ['seva', 'Seva', HeartHandshake],
   ['association', 'Association', Users],
@@ -76,8 +85,26 @@ const nav = [
   ['settings', 'Settings', Settings2],
 ] as const;
 export function JournalApp() {
+  return (
+    <CompanionProvider>
+      <JournalWorkspace />
+    </CompanionProvider>
+  );
+}
+function CompanionStatus() {
+  const { error, reload } = useCompanion();
+  return error ? (
+    <div className="companion-error" role="alert">
+      <p>{error}</p>
+      <button className="text-button" onClick={() => void reload().catch(() => {})}>
+        Reload saved progress
+      </button>
+    </div>
+  ) : null;
+}
+function JournalWorkspace() {
   const path = usePathname().split('/')[1] ?? '';
-  const isTodayPage = ['', 'habits', 'today-report'].includes(path);
+  const isTodayPage = ['', 'habits', 'today-report', 'learn'].includes(path);
   const [state, setState] = useState<AppState | null>(null),
     [date, setDate] = useState(''),
     [error, setError] = useState(''),
@@ -295,6 +322,8 @@ export function JournalApp() {
   const journalDate = isTodayPage ? state.today : date;
   const r = onDate(state.records, journalDate),
     t = totals(r, state.settings);
+  if (focus === 'japa')
+    return <JapaSanctuary state={state} actions={actions} onExit={() => setFocus(null)} />;
   if (focus)
     return (
       <FocusMode
@@ -325,29 +354,31 @@ export function JournalApp() {
             <span>{state.settings.subtitle}</span>
           </div>
         </Link>
-        <p className="sidebar-caption">A LITTLE SINCERITY, EVERY DAY</p>
+        <p className="sidebar-caption">CHANT · READ · HEAR</p>
         <nav aria-label="Main navigation">
-          {nav.slice(0, 3).map(([slug, label, Icon]) => (
-            <Link
-              key={slug}
-              href={'/' + slug}
-              className={path === slug ? 'active' : ''}
-              aria-current={path === slug ? 'page' : undefined}
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-            </Link>
-          ))}
+          {nav
+            .filter(([slug]) => ['', 'japa', 'reading', 'hearing'].includes(slug))
+            .map(([slug, label, Icon]) => (
+              <Link
+                key={slug}
+                href={'/' + slug}
+                className={path === slug ? 'active' : ''}
+                aria-current={path === slug ? 'page' : undefined}
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+              </Link>
+            ))}
           {[
             {
-              label: 'My practices',
-              slugs: ['japa', 'hearing', 'reading', 'krishna', 'seva', 'association'],
+              label: 'My journal',
+              slugs: ['journal', 'today-report', 'habits', 'krishna', 'seva', 'association'],
             },
             {
               label: 'Reflect & grow',
               slugs: ['reflection', 'jayananda', 'prabhupada', 'purpose'],
             },
-            { label: 'My journey', slugs: ['history', 'weekly', 'monthly', 'settings'] },
+            { label: 'My journey', slugs: ['learn', 'history', 'weekly', 'monthly', 'settings'] },
           ].map((group) => (
             <details className="nav-group" key={group.label} open={group.slugs.includes(path)}>
               <summary>{group.label}</summary>
@@ -442,6 +473,7 @@ export function JournalApp() {
           </div>
         </header>
         <main id="main" className="main-content">
+          <CompanionStatus />
           {state.demo && (
             <div className="demo-banner">
               Development journal · Sample entries · Local database only
@@ -464,7 +496,17 @@ export function JournalApp() {
                 <Link href="/">Return to Today →</Link>
               </section>
             ) : path === '' ? (
-              <Dashboard state={state} date={state.today} actions={actions} />
+              <PillarHome state={state} actions={actions} />
+            ) : path === 'journal' ? (
+              <Dashboard state={state} date={journalDate} actions={actions} />
+            ) : path === 'japa' ? (
+              <ChantCompanion state={state} actions={actions} date={date} />
+            ) : path === 'reading' ? (
+              <ReadingCompanion state={state} actions={actions} date={journalDate} />
+            ) : path === 'hearing' ? (
+              <HearingCompanion state={state} actions={actions} date={date} />
+            ) : path === 'learn' ? (
+              <LearningCompanion state={state} actions={actions} />
             ) : path === 'today-report' ? (
               <TodayReport state={state} actions={actions} />
             ) : path === 'habits' ? (
@@ -502,9 +544,9 @@ export function JournalApp() {
       <nav className="bottom-nav" aria-label="Mobile navigation">
         {[
           ['', 'Today', Sun],
-          ['japa', 'Japa', Flower2],
-          ['today-report', 'Report', ClipboardList],
-          ['habits', 'Habits', ListChecks],
+          ['japa', 'Chant', MalaIcon],
+          ['reading', 'Read', BookOpen],
+          ['hearing', 'Hear', Headphones],
         ].map(([slug, label, Icon]) => {
           const I = Icon as typeof Sun;
           return (

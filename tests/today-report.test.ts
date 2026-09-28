@@ -45,6 +45,15 @@ describe('today report', () => {
     expect(report.pending.map((e) => e.key)).toContain('morning');
     expect(report.items.find((e) => e.key === 'wake')?.detail).toContain('07:45');
   });
+  it('shows saved verses even when optional reading time was not entered', () => {
+    const s = state();
+    s.records.reading = [
+      entry({ book: 'Bhagavad-gītā As It Is', verseRange: '2:10–2:13', durationMinutes: 0 }),
+    ];
+    const item = todayReport(s).items.find((e) => e.key === 'reading');
+    expect(item?.detail).toBe('2:10–2:13 read · Reading time not entered');
+    expect(item?.done).toBe(false);
+  });
   it('uses minimum day targets and allows zero targets', () => {
     const s = state();
     s.records.daily = [entry({ mode: 'minimum' })];

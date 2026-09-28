@@ -378,3 +378,32 @@ export const habitCheckins = sqliteTable(
     check('habit_completed_boolean', sql`${t.completed} IN (0, 1)`),
   ],
 );
+
+export const companionEntries = sqliteTable(
+  'companion_entries',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    key: text('key', {
+      enum: [
+        'book',
+        'instruction',
+        'rhythm',
+        'japa-draft',
+        'course:soulful-japa',
+        'course:happiness-pleasure',
+        'course:prabhupada',
+        'reading:bg',
+      ],
+    }).notNull(),
+    value: text('value').notNull(),
+    version: integer('version').notNull().default(1),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [
+    uniqueIndex('companion_user_key').on(t.userId, t.key),
+    check('companion_version_positive', sql`${t.version} > 0`),
+  ],
+);

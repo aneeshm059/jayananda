@@ -25,18 +25,36 @@ export function EntryForm({
   onSave,
 }: Props) {
   const requestId = useRef(crypto.randomUUID());
+  const submitting = useRef(false);
+  const dirty = useRef(false);
   const definition = forms[collection],
     dialog = useRef<HTMLDialogElement>(null),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState('');
+    [error, setError] = useState(''),
+    [confirmDiscard, setConfirmDiscard] = useState(false);
   useEffect(() => {
     const node = dialog.current;
     node?.showModal();
     return () => node?.close();
   }, []);
+  useEffect(() => {
+    const protect = (event: BeforeUnloadEvent) => {
+      if (dirty.current || submitting.current) event.preventDefault();
+    };
+    window.addEventListener('beforeunload', protect);
+    return () => window.removeEventListener('beforeunload', protect);
+  }, []);
+  function close() {
+    if (submitting.current) return;
+    if (dirty.current) setConfirmDiscard(true);
+    else onClose();
+  }
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
+    setConfirmDiscard(false);
     setError('');
     const fd = new FormData(e.currentTarget);
     const data: Record<string, unknown> = { date: fd.get('date') };
@@ -58,15 +76,18 @@ export function EntryForm({
     if (!valid.success) {
       setError(valid.error.issues.map((i) => i.message).join(' '));
       setBusy(false);
+      submitting.current = false;
       return;
     }
     try {
       await onSave(collection, { ...valid.data, _requestId: requestId.current }, entry?.id);
+      dirty.current = false;
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Couldn’t save. Please try again.');
     } finally {
       setBusy(false);
+      submitting.current = false;
     }
   }
   function fieldView(field: Field) {
@@ -135,12 +156,12 @@ export function EntryForm({
       aria-labelledby="entry-form-title"
       onCancel={(e) => {
         e.preventDefault();
-        if (!busy) onClose();
+        close();
       }}
     >
       <header>
         <Flower2 size={24} />
-        <button className="icon-button" aria-label="Close form" disabled={busy} onClick={onClose}>
+        <button className="icon-button" aria-label="Close form" disabled={busy} onClick={close}>
           <X size={20} />
         </button>
       </header>
@@ -162,7 +183,13 @@ export function EntryForm({
           )}
         </div>
       )}
-      <form onSubmit={submit}>
+      <form
+        onSubmit={submit}
+        onChange={() => {
+          dirty.current = true;
+          setConfirmDiscard(false);
+        }}
+      >
         <label>
           Date
           <input name="date" type="date" defaultValue={entry?.date ?? date} required />
@@ -201,8 +228,23 @@ export function EntryForm({
             {error}
           </p>
         )}
+        {confirmDiscard && (
+          <div className="gentle-note" role="alert">
+            <p>Your changes have not been saved.</p>
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => setConfirmDiscard(false)}
+            >
+              Keep editing
+            </button>{' '}
+            <button type="button" className="text-button" onClick={onClose}>
+              Discard changes
+            </button>
+          </div>
+        )}
         <footer className="form-actions">
-          <button type="button" className="button secondary" onClick={onClose} disabled={busy}>
+          <button type="button" className="button secondary" onClick={close} disabled={busy}>
             Cancel
           </button>
           <button className="button primary" disabled={busy}>

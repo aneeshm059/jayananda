@@ -1,5 +1,13 @@
 # Release verification
 
+## Three-pillar companion — approved release, 28 September 2026
+
+The owner approved the working local demo and production release, with English-only hearing suggestions. Both Hindi Prabhupāda selections were removed; catalog refresh uses the verified English allowlist. Historical progress remains intact, and completion counts include only available lessons.
+
+- Final English-only build: 123 tests pass, TypeScript passes, production build and Wrangler deployment dry run pass.
+- The preceding local review passed 129 HTTP integration assertions and browser checks for all three players, sequential Bhagavad-gītā reading, interrupted-save recovery, and phone/desktop layouts; details are below.
+- The production database was backed up privately and a Time Travel recovery bookmark captured before migration. Only the additive `0002_third_catseye.sql` companion table/index migration is required. Existing journal tables and authentication secrets remain unchanged.
+
 ## Gentle companion redesign — 28 September 2026
 
 - TypeScript, production build and 79 unit tests passed, including five tests for honest practice-garden activity, dates, zero corrections and habit check-ins.
@@ -90,3 +98,28 @@ Live checks on `https://jayananda.aneeshm059.workers.dev` confirmed anonymous `/
 Deployment version: `3fc83e16-1441-44ce-8ad8-7a9be01c97c5`.
 
 This is functional verification, not an independent penetration test or a comprehensive screen-reader audit. Known functional limitations are recorded in the README.
+
+## Three-pillar local review (28 September 2026)
+
+Local working branch `codex/three-pillar-companion`; no commit, push, remote migration, or deployment. Additive companion migration applied only to local D1.
+
+- TypeScript, vinext compatibility check and production bundle build pass.
+- 101 unit/domain/repository tests pass, including user isolation, optimistic conflicts, bounded source links, playback seek accounting and midnight splitting.
+- Existing Worker + local D1 checks: 40 general assertions and 16 Japa/report assertions pass. One initial general run had a transient Wrangler proxy connection failure; the isolated request and complete rerun passed.
+- Companion HTTP integration: 25 assertions pass against the built local Worker, covering authentication, origin and payload validation, per-user isolation, optimistic version conflicts, private caching and JSON export. Disposable fixture values were restored after the checks.
+- Browser: original Soulful Japa video plays in the embedded player; a 10:30 bookmark survives a full reload; Happiness & Pleasure has an independent bookmark and moves from Session 1 to Session 2 after explicit completion.
+- PrabhupadaBooks bookmark and personal note persist after reload; external link returns the exact saved URL. Reading and home layouts checked at phone width (390px) without horizontal overflow.
+- Japa browser flow: plus twice, minus once, save unfinished session, reload and restore one round paused, then finish once. The daily total increased by exactly one round and the draft cleared.
+- A personal instruction saved from Soulful Japa appears in the chanting space with its source. The learning page also fits the 390px phone viewport without horizontal overflow.
+
+Catalog sources and ordering are documented in `docs/LEARNING-SOURCES.md`. This first demo has local account data only. Recommendations currently use a small verified editorial selection; there are no generated lecture summaries or AI processing of private reflections. Reminder cues are in-app, not push delivery.
+
+### Playback and sequential reading follow-up
+
+- TypeScript and the production bundle pass. All 121 tests pass, including the YouTube loader's failed-load retry and timeout behavior, accurate watch credit, Bhagavad-gītā chapter/verse boundaries, concurrent submissions, and an injected database insert failure that proves report/bookmark rollback.
+- Local Worker integration: 40 general, 16 Japa/report, 25 companion, 26 habit and 22 sequential-reading assertions pass. The reading harness restores its isolated fixture bookmark and removes only its own journal rows.
+- Browser playback verified for The Acharya's Prabhupada lecture, Happiness & Pleasure Session 2, and Soulful Japa Session 1. Direct Pause/Resume works; independent bookmarks remain. The originally reported failure was intermittent and could not be consistently reproduced. Player startup now has bounded loading, explicit Play/Resume, error messages and Retry; unavailable third-party videos still depend on YouTube.
+- Browser reading flow starts at 2:10, captures the start/book/date, saves an ending verse of 2:10, and shows 2:11 after reload. The next session's actual source link is `https://prabhupadabooks.com/bg/2/11`.
+- Interrupted-save test stopped the local Worker while submitting the reading form. A visible failure retained the verse and note; navigating away and returning restored the draft. Restarting the Worker and retrying saved the report and advanced the bookmark once. Today Report displayed the verse range and note. Unentered optional minutes are not fabricated.
+- Unsaved generic journal forms require an explicit discard before closing; Keep editing preserves the form. Pending playback checkpoints survive route changes in the companion provider and warn before unloading. Reading finish drafts use session storage for recovery within the browser tab.
+- Reading and learning layouts fit a 390px phone viewport without horizontal overflow; the reading layout was also reviewed at 1280px. All testing used local sample data. No commit, push, remote migration or deployment has occurred.

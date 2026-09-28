@@ -41,6 +41,17 @@ export function todayReport(state: AppState) {
       const amount = key === 'japa' ? values.rounds : values[key];
       const goal = target[key];
       const unit = key === 'japa' ? 'rounds' : 'min';
+      const readingRanges =
+        key === 'reading'
+          ? records.reading
+              .map((entry) => entry.verseRange)
+              .filter(Boolean)
+              .join('; ')
+          : '';
+      const progressDetail =
+        goal > 0
+          ? `${amount} / ${goal} ${unit}${amount < goal ? ` · ${Math.round((goal - amount) * 100) / 100} ${unit} remaining` : ' · target met'}`
+          : `${amount} ${unit} recorded`;
       return {
         key,
         label: {
@@ -52,10 +63,9 @@ export function todayReport(state: AppState) {
         collection: key,
         required: goal > 0,
         done: goal > 0 ? amount >= goal : records[key].length > 0,
-        detail:
-          goal > 0
-            ? `${amount} / ${goal} ${unit}${amount < goal ? ` · ${Math.round((goal - amount) * 100) / 100} ${unit} remaining` : ' · target met'}`
-            : `${amount} ${unit} recorded`,
+        detail: readingRanges
+          ? `${readingRanges} read · ${amount === 0 ? 'Reading time not entered' : progressDetail}`
+          : progressDetail,
       };
     }),
     {
