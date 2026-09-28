@@ -8,6 +8,10 @@ The owner approved the working local demo and production release, with English-o
 - The preceding local review passed 129 HTTP integration assertions and browser checks for all three players, sequential Bhagavad-gītā reading, interrupted-save recovery, and phone/desktop layouts; details are below.
 - The production database was backed up privately and a Time Travel recovery bookmark captured before migration. Only the additive `0002_third_catseye.sql` companion table/index migration is required. Existing journal tables and authentication secrets remain unchanged.
 
+Production release completed from code commit `322160eb96448f9365fb0c590bf81ee8c82235d0` on `main`. Migration `0002_third_catseye.sql` applied successfully, with no pending migrations. All 22 production smoke checks passed: sign-in and private routes, anonymous and cross-origin rejection, PWA assets, YouTube security headers, exact deployed bundle match, English-only lecture selection and sequential reading. Live checks did not read or write authenticated journal records. Cloudflare startup reported 21 ms.
+
+Deployment version: `6ab62c20-93c4-474c-a43e-67aa2b57265e`.
+
 ## Gentle companion redesign — 28 September 2026
 
 - TypeScript, production build and 79 unit tests passed, including five tests for honest practice-garden activity, dates, zero corrections and habit check-ins.
