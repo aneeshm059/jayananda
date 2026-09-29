@@ -13,6 +13,11 @@ The owner authorized testing and production release of the lecture-library chang
 - A private production SQL backup and Time Travel recovery information were captured before the additive `0003_calm_bloodscream.sql` migration. The migration adds only shared public catalog/sync tables and indexes; existing journal and authentication tables remain unchanged.
 
 
+
+Production release completed from code commit `516eca7` on `main`. Migration `0003_calm_bloodscream.sql` applied successfully, with no pending migrations. All 26 production smoke checks passed, covering private routes/APIs, anonymous and cross-origin rejection, PWA assets, YouTube headers, exact deployed-bundle match, the expanded lecture library, channel sync controls, and sequential reading. Production smoke checks did not read or write authenticated journal records.
+
+Deployment version: `e4c4851e-da9c-40a1-a48a-3249cdd953d4`.
+
 ## Three-pillar companion — approved release, 28 September 2026
 
 The owner approved the working local demo and production release, with English-only hearing suggestions. Both Hindi Prabhupāda selections were removed; catalog refresh uses the verified English allowlist. Historical progress remains intact, and completion counts include only available lessons.
