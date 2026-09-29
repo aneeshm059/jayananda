@@ -30,6 +30,7 @@ import { localDate, prettyDate, addDays, monthBounds } from '@/lib/domain/dates'
 import { onDate, totals } from '@/lib/domain/calculations';
 import { Dashboard } from './today';
 import { CompanionProvider, useCompanion } from './companion-provider';
+import { LectureLibraryProvider } from './lecture-library-provider';
 import { PillarHome, ChantCompanion } from './pillar-home';
 import { HearingCompanion, LearningCompanion } from './learning-companion';
 import { ReadingCompanion } from './reading-companion';
@@ -87,7 +88,9 @@ const nav = [
 export function JournalApp() {
   return (
     <CompanionProvider>
-      <JournalWorkspace />
+      <LectureLibraryProvider>
+        <JournalWorkspace />
+      </LectureLibraryProvider>
     </CompanionProvider>
   );
 }

@@ -407,3 +407,46 @@ export const companionEntries = sqliteTable(
     check('companion_version_positive', sql`${t.version} > 0`),
   ],
 );
+
+export const acharyaSync = sqliteTable('acharya_sync', {
+  id: text('id').primaryKey(),
+  value: text('value').notNull(),
+  version: integer('version').notNull().default(0),
+  leaseToken: text('lease_token').notNull().default(''),
+  leaseUntil: integer('lease_until').notNull().default(0),
+  updatedAt: text('updated_at').notNull(),
+});
+export const acharyaVideoCache = sqliteTable('acharya_video_cache', {
+  videoId: text('video_id').primaryKey(),
+  listedTitle: text('listed_title').notNull(),
+  listedDuration: integer('listed_duration'),
+  value: text('value').notNull(),
+  checkedAt: text('checked_at').notNull(),
+});
+export const acharyaStaging = sqliteTable(
+  'acharya_staging',
+  {
+    id: text('id').primaryKey(),
+    runId: text('run_id').notNull(),
+    videoId: text('video_id').notNull(),
+    verdict: text('verdict', { enum: ['eligible', 'excluded', 'unknown'] }).notNull(),
+    value: text('value'),
+    sourcePosition: integer('source_position').notNull(),
+    seedPosition: integer('seed_position'),
+  },
+  (t) => [
+    uniqueIndex('acharya_stage_run_video').on(t.runId, t.videoId),
+    index('acharya_stage_run').on(t.runId),
+  ],
+);
+export const acharyaCatalog = sqliteTable(
+  'acharya_catalog',
+  {
+    videoId: text('video_id').primaryKey(),
+    value: text('value').notNull(),
+    position: integer('position').notNull(),
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [index('acharya_catalog_order').on(t.active, t.position)],
+);

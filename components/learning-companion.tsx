@@ -25,6 +25,7 @@ import {
 } from '@/lib/domain/learning-progress';
 import { loadYouTube, youtubePlaybackError, type YouTubePlayer } from '@/lib/youtube-player';
 import { useCompanion } from './companion-provider';
+import { LectureSync, useLectureLibrary } from './lecture-library-provider';
 import { CourseShortcut } from './pillar-home';
 import { PracticePage } from './practice-page';
 import type { Actions } from './journal-app';
@@ -38,10 +39,13 @@ export function HearingCompanion({
   actions: Actions;
   date?: string;
 }) {
-  const course = learningCourses.find((c) => c.id === 'prabhupada');
+  const { catalog } = useLectureLibrary();
   const { values } = useCompanion();
   const p = values['course:prabhupada'] as CourseProgress | undefined;
-  const lesson = course?.lessons.find((l) => l.id === p?.currentVideoId) ?? course?.lessons[0];
+  const lesson =
+    catalog.lessons.find((l) => l.id === p?.currentVideoId) ??
+    catalog.lessons.find((l) => !p?.lessons[l.id]?.completed) ??
+    catalog.lessons[0];
   return (
     <div className="hearing-companion">
       <div className="page-intro">
@@ -62,7 +66,10 @@ export function HearingCompanion({
           <div>
             <span className="eyebrow">THE ACHARYA · ŚRĪLA PRABHUPĀDA</span>
             <h2>{lesson.title}</h2>
-            <p>Your place will be saved as you listen.</p>
+            <p>
+              {catalog.lessons.length} English lectures · 30–45 minutes. Your place will be saved as
+              you listen.
+            </p>
             <span className="button primary">
               <Play size={17} /> {p?.currentVideoId ? 'Continue hearing' : 'Begin hearing'}
             </span>
@@ -88,7 +95,19 @@ export function HearingCompanion({
 export function LearningCompanion({ state, actions }: { state: AppState; actions: Actions }) {
   const query = useSearchParams();
   const { ready, error, reload } = useCompanion();
-  const course = learningCourses.find((c) => c.id === query.get('course')) ?? learningCourses[0];
+  const library = useLectureLibrary();
+  const selectedCourse =
+    learningCourses.find((c) => c.id === query.get('course')) ?? learningCourses[0];
+  const course =
+    selectedCourse.id === 'prabhupada'
+      ? {
+          ...selectedCourse,
+          lessons: library.catalog.lessons.map((lesson, index) => ({
+            ...lesson,
+            position: index + 1,
+          })),
+        }
+      : selectedCourse;
   return (
     <div className="learning-space">
       <div className="learning-top">
@@ -111,7 +130,7 @@ export function LearningCompanion({ state, actions }: { state: AppState; actions
           </Link>
         ))}
       </div>
-      {!ready ? (
+      {!ready || (course.id === 'prabhupada' && !library.ready) ? (
         <div className="empty-state">
           <p role="status">{error || 'Finding your saved place…'}</p>
           {error && (
@@ -119,6 +138,15 @@ export function LearningCompanion({ state, actions }: { state: AppState; actions
               Try again
             </button>
           )}
+        </div>
+      ) : course.lessons.length === 0 ? (
+        <div className="empty-state">
+          <h1>Your lecture library</h1>
+          <p>
+            No verified English lectures of 30–45 minutes are available yet. Use Sync lectures to
+            check The Acharya.
+          </p>
+          <LectureSync />
         </div>
       ) : (
         <CoursePlayer key={course.id} course={course} state={state} actions={actions} />
@@ -146,7 +174,6 @@ function CoursePlayer({
     course.lessons[0];
   const [lesson, setLesson] = useState(first),
     [playing, setPlaying] = useState(false),
-    [activated, setActivated] = useState(false),
     [position, setPosition] = useState(initial.lessons[first.id]?.position ?? 0),
     [todaySeconds, setTodaySeconds] = useState(
       initial.watchedByDay[localDate(state.settings.timezone)] ?? 0,
@@ -180,6 +207,8 @@ function CoursePlayer({
     timezone = useRef(state.settings.timezone),
     activeSave = useRef<Promise<void> | null>(null),
     watchedHere = useRef<Record<string, number>>({}),
+    completing = useRef(false),
+    onEnded = useRef<() => void>(() => {}),
     seekTarget = useRef<{ id: string; position: number; expires: number } | null>(null),
     capture = useRef<() => void>(() => {});
   saver.current = save;
@@ -278,7 +307,6 @@ function CoursePlayer({
     const savedPosition = remote.lessons[target.id]?.position ?? 0;
     if (target.id !== activeId.current) {
       activeId.current = target.id;
-      setActivated(false);
       setLesson(target);
     } else if (
       playerIsReady.current &&
@@ -286,14 +314,16 @@ function CoursePlayer({
       Math.abs(player.current.getCurrentTime() - savedPosition) > 1
     ) {
       seekTarget.current = { id: target.id, position: savedPosition, expires: Date.now() + 10000 };
-      player.current.seekTo(savedPosition, true);
+      if ([-1, 0, 5].includes(player.current.getPlayerState()))
+        player.current.cueVideoById({ videoId: target.id, startSeconds: savedPosition });
+      else player.current.seekTo(savedPosition, true);
     }
     setPosition(savedPosition);
     setCompleted(remote.lessons[target.id]?.completed ?? false);
     setTodaySeconds(remote.watchedByDay[localDate(timezone.current)] ?? 0);
   }, [values[key]]);
   useEffect(() => {
-    if (!activated || !host.current) return;
+    if (!host.current) return;
     let cancelled = false,
       playerReady = false,
       failed = false,
@@ -399,14 +429,10 @@ function CoursePlayer({
               playerIsReady.current = true;
               setPlayerPhase('ready');
               const saved = progress.current.lessons[id]?.position ?? 0;
-              if (saved > 0) {
-                seekTarget.current = { id, position: saved, expires: Date.now() + 10000 };
-                e.target.seekTo(saved, true);
-              }
               last.current = { time: saved, wall: performance.now() };
-              // This can be blocked after an asynchronous load. The visible
-              // Play button below also calls playVideo directly from a click.
-              e.target.playVideo();
+              // Prepare the player before the user's first tap. playerVars.start
+              // restores the bookmark when playback begins; do not autoplay or
+              // seek here and consume the gesture after asynchronous loading.
             },
             onStateChange: (e) => {
               if (
@@ -429,7 +455,7 @@ function CoursePlayer({
               // replace the saved bookmark before genuine playback begins.
               if (hasStarted && (e.data === 0 || e.data === 1 || e.data === 2))
                 updatePosition(id, e.target.getCurrentTime(), e.target.getDuration());
-              if (e.data === 0) setStatus('Lesson ended. Mark it complete when you are ready.');
+              if (e.data === 0 && hasStarted) onEnded.current();
               if ((e.data === 2 || e.data === 0) && !blocked.current && !globalError.current)
                 void persist.current().catch(() => {});
             },
@@ -466,7 +492,7 @@ function CoursePlayer({
       retainCheckpoint();
       if (!blocked.current && !globalError.current) void persist.current().catch(() => {});
     };
-  }, [activated, lesson.id, playerAttempt]);
+  }, [lesson.id, playerAttempt]);
   useEffect(() => {
     const clock = window.setInterval(() => {
       capture.current();
@@ -505,7 +531,6 @@ function CoursePlayer({
     player.current?.pauseVideo?.();
     setPlayerError('');
     setPlayerPhase('loading');
-    setActivated(true);
     setPlayerAttempt((attempt) => attempt + 1);
   };
   const togglePlayback = () => {
@@ -521,7 +546,8 @@ function CoursePlayer({
   };
   const choose = async (id: string) => {
     const target = course.lessons.find((item) => item.id === id);
-    if (!target || busy || id === activeId.current) return;
+    if (!target || busy || switching.current || completing.current || id === activeId.current)
+      return;
     capture.current();
     player.current?.pauseVideo?.();
     setBusy(true);
@@ -531,7 +557,9 @@ function CoursePlayer({
       activeId.current = id;
       progress.current.currentVideoId = id;
       changed();
-      setActivated(false);
+      // Events from the old iframe now fail the active-ID check. Let the new
+      // iframe report playback even while its selected place is being saved.
+      switching.current = false;
       setPlaying(false);
       setLesson(target);
       setCompleted(progress.current.lessons[id]?.completed ?? false);
@@ -545,7 +573,9 @@ function CoursePlayer({
       setBusy(false);
     }
   };
-  const complete = async () => {
+  const complete = async (reviewed = true) => {
+    if (completing.current || switching.current) return;
+    completing.current = true;
     capture.current();
     player.current?.pauseVideo?.();
     setBusy(true);
@@ -559,12 +589,20 @@ function CoursePlayer({
     changed();
     setCompleted(true);
     try {
-      await persist.current(true);
-      setStatus('Lesson complete. Your next lesson is ready.');
+      await persist.current(reviewed);
+      setStatus(
+        course.id === 'prabhupada'
+          ? 'Lecture complete. Choose the next lecture when you are ready.'
+          : 'Lesson complete. Your next lesson is ready.',
+      );
     } catch {
     } finally {
       setBusy(false);
+      completing.current = false;
     }
+  };
+  onEnded.current = () => {
+    if (!progress.current.lessons[lesson.id]?.completed) void complete(false);
   };
   const next = nextLesson(course.lessons, lesson.id);
   const secondsLeft = Math.max(0, goal * 60 - todaySeconds);
@@ -584,26 +622,14 @@ function CoursePlayer({
         <div className="lesson-main">
           <section className="video-card">
             <div className="video-stage">
-              {activated ? (
-                <div ref={host} className="youtube-host" />
-              ) : (
-                <button className="video-poster" onClick={() => setActivated(true)}>
-                  <img src={`https://i.ytimg.com/vi/${lesson.id}/hqdefault.jpg`} alt="" />
-                  <span className="poster-play">
-                    <Play size={28} fill="currentColor" />
-                  </span>
-                  <span className="poster-label">
-                    {position > 0 ? `Resume at ${playbackTime(position)}` : 'Play this lesson'}
-                  </span>
-                </button>
-              )}
+              <div ref={host} className="youtube-host" />
             </div>
-            {activated && playerPhase === 'loading' && (
+            {playerPhase === 'loading' && (
               <p className="fine-print" role="status">
                 Loading the YouTube player…
               </p>
             )}
-            {activated && playerPhase === 'blocked' && (
+            {playerPhase === 'blocked' && (
               <p className="fine-print" role="status">
                 The player is ready. Press Play below to start listening.
               </p>
@@ -651,10 +677,10 @@ function CoursePlayer({
             </div>
           </section>
           <div className="lesson-actions">
-            {activated && !playerError && (
+            {!playerError && (
               <button
                 className="button secondary"
-                disabled={playerPhase === 'loading'}
+                disabled={playerPhase === 'loading' || playerPhase === 'idle'}
                 onClick={togglePlayback}
               >
                 {playing ? <Pause size={16} /> : <Play size={16} />}
@@ -669,7 +695,7 @@ function CoursePlayer({
             )}
             <button
               className="button secondary"
-              disabled={!activated || playerPhase === 'loading' || !!playerError}
+              disabled={!playerIsReady.current || playerPhase === 'loading' || !!playerError}
               onClick={() => player.current?.seekTo(Math.max(0, position - 10), true)}
             >
               <RotateCcw size={16} />
@@ -678,16 +704,28 @@ function CoursePlayer({
             {completed ? (
               <button
                 className="button primary"
-                disabled={!next || busy}
+                disabled={!next || busy || !!error}
                 onClick={() => next && void choose(next.id)}
               >
-                {next ? 'Continue to next lesson' : 'Course completed'}
+                {next
+                  ? course.id === 'prabhupada'
+                    ? 'Next lecture'
+                    : 'Next lesson'
+                  : count === course.lessons.length
+                    ? course.id === 'prabhupada'
+                      ? 'All lectures completed'
+                      : 'Course completed'
+                    : 'End of this list'}
                 <ArrowRight size={16} />
               </button>
             ) : (
               <button className="button primary" disabled={busy} onClick={() => void complete()}>
                 <Check size={16} />
-                {busy ? 'Saving…' : 'Mark lesson complete'}
+                {busy
+                  ? 'Saving…'
+                  : course.id === 'prabhupada'
+                    ? 'Mark lecture complete'
+                    : 'Mark lesson complete'}
               </button>
             )}
           </div>
@@ -706,44 +744,46 @@ function CoursePlayer({
               status || 'Your place will be saved while you watch.'
             )}
           </div>
-          <details className="secondary-panel">
-            <summary>
-              <Bookmark size={16} /> Keep one instruction for my next Japa
-            </summary>
-            <form
-              className="lesson-note"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setBusy(true);
-                try {
-                  await save('instruction', {
-                    text: note.trim(),
-                    source: lesson.title,
-                    sourceUrl: `https://www.youtube.com/watch?v=${lesson.id}`,
-                  });
-                  setStatus('Your instruction will be waiting in your Japa space.');
-                  setNote('');
-                } catch (e) {
-                  setError((e as Error).message);
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              <label>
-                In your own words
-                <textarea
-                  maxLength={2000}
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="What would you like to bring into your chanting?"
-                />
-              </label>
-              <button className="button secondary" disabled={!note.trim() || busy}>
-                Save my instruction
-              </button>
-            </form>
-          </details>
+          {course.id === 'soulful-japa' && (
+            <details className="secondary-panel">
+              <summary>
+                <Bookmark size={16} /> Keep one instruction for my next Japa
+              </summary>
+              <form
+                className="lesson-note"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setBusy(true);
+                  try {
+                    await save('instruction', {
+                      text: note.trim(),
+                      source: lesson.title,
+                      sourceUrl: `https://www.youtube.com/watch?v=${lesson.id}`,
+                    });
+                    setStatus('Your instruction will be waiting in your Japa space.');
+                    setNote('');
+                  } catch (e) {
+                    setError((e as Error).message);
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                <label>
+                  In your own words
+                  <textarea
+                    maxLength={2000}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="What would you like to bring into your chanting?"
+                  />
+                </label>
+                <button className="button secondary" disabled={!note.trim() || busy}>
+                  Save my instruction
+                </button>
+              </form>
+            </details>
+          )}
           <details className="secondary-panel">
             <summary>Watched elsewhere? Update my bookmark</summary>
             <ManualBookmark
@@ -774,7 +814,9 @@ function CoursePlayer({
                     position: seconds,
                     expires: Date.now() + 10000,
                   };
-                  player.current.seekTo(seconds, true);
+                  if ([-1, 0, 5].includes(player.current.getPlayerState()))
+                    player.current.cueVideoById({ videoId: lesson.id, startSeconds: seconds });
+                  else player.current.seekTo(seconds, true);
                 }
                 last.current = { time: seconds, wall: performance.now() };
                 updatePosition(lesson.id, seconds, duration);
@@ -833,52 +875,63 @@ function CoursePlayer({
               </label>
             )}
           </section>
-          <details className="course-outline" open>
-            <summary>
-              <span>
-                Your lessons <small>{count} completed</small>
-              </span>
-            </summary>
-            <input
-              aria-label="Find a lesson"
-              placeholder="Find a session…"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            />
-            <div className="lesson-list">
-              {course.lessons
-                .filter((l) => l.title.toLowerCase().includes(filter.toLowerCase()))
-                .map((l) => (
-                  <button
-                    key={l.id}
-                    className={'lesson-row ' + (l.id === lesson.id ? 'selected' : '')}
-                    onClick={() => void choose(l.id)}
-                    disabled={busy}
-                    aria-current={l.id === lesson.id ? 'step' : undefined}
-                  >
-                    <span className="lesson-number">
-                      {progress.current.lessons[l.id]?.completed ? (
-                        <Check size={15} />
-                      ) : (
-                        String(l.position).padStart(2, '0')
-                      )}
-                    </span>
-                    <span>
-                      {l.title}
-                      <small>
-                        {l.durationSeconds ? playbackTime(l.durationSeconds) : 'Video lesson'}
-                      </small>
-                    </span>
-                    {l.id === lesson.id && <Play size={13} />}
-                  </button>
-                ))}
-            </div>
-            <p className="fine-print">
-              Course lessons follow numbered sessions; supplementary talks follow. Revisit any
-              lesson whenever you like.
-            </p>
-          </details>
         </aside>
+        <section
+          className="course-outline full-course-outline"
+          aria-labelledby="lesson-library-title"
+        >
+          <h2 id="lesson-library-title">
+            <span>
+              {course.id === 'prabhupada' ? 'All lectures' : 'All lessons'}{' '}
+              <small>
+                {course.lessons.length} available · {count} completed
+              </small>
+            </span>
+          </h2>
+          {course.id === 'prabhupada' && <LectureSync />}
+          <input
+            aria-label="Find a lesson"
+            placeholder="Find a session…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+          <div className="lesson-list">
+            {course.lessons
+              .filter((l) => l.title.toLowerCase().includes(filter.toLowerCase()))
+              .map((l) => (
+                <button
+                  key={l.id}
+                  className={'lesson-row ' + (l.id === lesson.id ? 'selected' : '')}
+                  onClick={() => void choose(l.id)}
+                  disabled={busy}
+                  aria-current={l.id === lesson.id ? 'step' : undefined}
+                >
+                  <span className="lesson-number">
+                    {progress.current.lessons[l.id]?.completed ? (
+                      <Check size={15} />
+                    ) : (
+                      String(l.position).padStart(2, '0')
+                    )}
+                  </span>
+                  <span>
+                    {l.title}
+                    <small>
+                      {l.durationSeconds ? playbackTime(l.durationSeconds) : 'Video lesson'}
+                    </small>
+                  </span>
+                  {l.id === lesson.id && <Play size={13} />}
+                </button>
+              ))}
+          </div>
+          {!course.lessons.some((l) => l.title.toLowerCase().includes(filter.toLowerCase())) && (
+            <p className="fine-print">No lectures match this search. Try a shorter title.</p>
+          )}
+          <p className="fine-print">
+            {course.id === 'prabhupada'
+              ? 'English lectures from The Acharya · 30–45 minutes. New lectures are added without changing your saved place.'
+              : 'Every lesson is listed in session order. Finish a lesson to continue to the next, or revisit any lesson here.'}
+          </p>
+        </section>
       </div>
     </>
   );

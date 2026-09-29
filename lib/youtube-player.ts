@@ -5,6 +5,7 @@ export type YouTubePlayer = {
   getPlaybackRate(): number;
   playVideo(): void;
   pauseVideo(): void;
+  cueVideoById(options: { videoId: string; startSeconds: number }): void;
   seekTo(seconds: number, allow: boolean): void;
   destroy(): void;
 };

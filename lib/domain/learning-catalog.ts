@@ -1,3 +1,5 @@
+import { bundledAcharyaLectures } from './acharya-catalog';
+
 export type Lesson = {
   /** Actual YouTube video ID; repeated playlist entries are deduplicated. */
   id: string;
@@ -23,12 +25,6 @@ export type LearningCourse = {
   dailyMinutes: number;
   lessons: Lesson[];
 };
-
-// Curated, verified English recordings only. The refresh script uses this same
-// allowlist and requires a review if a selected video's title changes.
-export const englishPrabhupadaSelections = [
-  { id: 'V6hmXsFUy2w', title: 'Knowledge | Srila Prabhupada English Lecture' },
-] as const;
 
 // Public metadata snapshot: 2026-09-28T15:21:46.710Z
 // Refreshed with scripts/refresh-learning-catalog.ts. See docs/LEARNING-SOURCES.md.
@@ -1080,17 +1076,11 @@ export const learningCourses: LearningCourse[] = [
   {
     id: 'prabhupada',
     title: 'Hear Śrīla Prabhupāda',
-    subtitle: 'Selected English lectures · The Acharya',
+    subtitle: 'English lectures · 30–45 minutes · The Acharya',
     speaker: 'Śrīla Prabhupāda',
     playlistId: '',
     sourceUrl: 'https://www.youtube.com/channel/UCDTX-lo7YZCg_P28_Mo4NOg',
     dailyMinutes: 30,
-    lessons: [
-      {
-        id: 'V6hmXsFUy2w',
-        title: 'Knowledge | Srila Prabhupada English Lecture',
-        position: 1,
-      },
-    ],
+    lessons: bundledAcharyaLectures.map((lesson, index) => ({ ...lesson, position: index + 1 })),
   },
 ];

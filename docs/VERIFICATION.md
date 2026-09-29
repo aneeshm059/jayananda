@@ -1,5 +1,18 @@
 # Release verification
 
+## Synced lecture library and playback — 29 September 2026
+
+The owner authorized testing and production release of the lecture-library changes.
+
+- The Acharya scan followed all 875 uploads. The final bundled library contains 296 English lectures lasting 30–45 minutes. Two recordings remain excluded because their original language could not be verified; known non-English recordings and durations outside the range are excluded.
+- TypeScript, 146 unit tests, the production build, deployment dry run, and all 13 vinext compatibility checks pass. Unit coverage includes source parsers, original ASR language, duration boundaries, bounded/resumable sync, concurrent leases, atomic publication, cache reuse, failed-sync preservation, and player-loader recovery.
+- All 154 local Worker/D1 API assertions pass across journal, habits, Japa corrections, companion storage, sequential reading, and lecture catalog tests. The lecture harness verifies authentication, origin/body validation, read-only GET, metadata eligibility, and preservation of personal progress, and restores its fixture state.
+- A real in-app full sync succeeded: 296 eligible lectures, two unverified records, with the selected lecture unchanged. An earlier failed-source run retained the published library. Source metadata collection briefly encountered HTTP 429; later successful sync supplied the remaining verifiable records to the bundled snapshot.
+- Browser checks verified one-click Play/Resume in Prabhupada, Soulful Japa, and Happiness & Pleasure; natural video ending automatically saving completion; Next lecture/lesson advancing; full queues (296/100/21); title search; selection from search; a 2:07 bookmark surviving reload; and no watched-minute credit from a manual near-end seek. Japa instruction controls appear only in Soulful Japa.
+- The player is visible before the library/sync controls. Desktop and phone layouts were reviewed; widths 320, 390, and 1440 showed no horizontal overflow. Temporary viewport overrides were reset. A transient test-browser embed-loading problem was isolated with a plain local iframe probe, then actual playback was successfully checked in all three courses.
+- A private production SQL backup and Time Travel recovery information were captured before the additive `0003_calm_bloodscream.sql` migration. The migration adds only shared public catalog/sync tables and indexes; existing journal and authentication tables remain unchanged.
+
+
 ## Three-pillar companion — approved release, 28 September 2026
 
 The owner approved the working local demo and production release, with English-only hearing suggestions. Both Hindi Prabhupāda selections were removed; catalog refresh uses the verified English allowlist. Historical progress remains intact, and completion counts include only available lessons.

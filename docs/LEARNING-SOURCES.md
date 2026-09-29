@@ -21,24 +21,24 @@ players. Their speaker is Madhu Pandit Dasa. The official Soulful Japa introduct
 describes progressive learning. Its historical plan for 108 written modules is
 not a statement about the present number of unique YouTube videos.
 
-The Prabhupada selection contains one verified English lecture from
-[The Acharya](https://www.youtube.com/@TheAcharya1), channel ID
-`UCDTX-lo7YZCg_P28_Mo4NOg`:
+The Prabhupada library uses [The Acharya](https://www.youtube.com/@TheAcharya1),
+channel ID `UCDTX-lo7YZCg_P28_Mo4NOg`. Its separate metadata snapshot is in
+`lib/domain/acharya-catalog.snapshot.json`. The library admits only English
+lectures with a verified duration from **1,800 through 2,700 seconds** inclusive.
+The length filter applies to Prabhupada lectures, not the two guided series.
 
-- [Knowledge | Srila Prabhupada English Lecture](https://www.youtube.com/watch?v=V6hmXsFUy2w)
+Original/default audio-language metadata or the original automatic-caption
+language establishes the spoken language. Translated or manually uploaded English
+subtitles and Latin-script titles alone do not. An explicit publisher title such
+as “English Lecture” is also accepted unless audio evidence contradicts it. Unknown
+language, Hindi labels, known non-English audio, unavailable recordings, and videos
+that disallow embedding are excluded. This is metadata-based classification, not
+a claim that every minute of every recording was independently listened to.
 
-This is an editorial selection, not a complete course or a claim about the
-channel's full catalog. YouTube oEmbed confirms the title, author name, and
-author handle. oEmbed does not supply duration, so its duration is deliberately
-absent from the saved catalog.
-
-The catalog is English-only. `englishPrabhupadaSelections` is the shared verified
-allowlist for the saved catalog and refresh script; it contains only the lecture
-above. Any addition requires an English-language source review. The refresh
-rejects a changed title instead of silently accepting a changed selection. The
-two previous Hindi selections are removed from discovery and future refreshes.
-Historical user bookmarks, completions, and watched minutes are not deleted or
-filtered when a video leaves the catalog.
+The older short English selection and Hindi selections are no longer offered.
+Historical bookmarks, completions, and watched minutes remain intact even when a
+video leaves discovery. Each video retains its YouTube ID; syncing new metadata
+never edits personal learning progress.
 
 The existing Soulful Japa and Happiness & Pleasure metadata contain no videos
 labeled Hindi. This is a metadata review, not a new audio-language audit of all
@@ -84,8 +84,7 @@ are listening-plan settings, not source metadata or requirements from the speake
 
 ## Refreshing
 
-Install `yt-dlp` separately, or set `YTDLP_BIN` to an existing executable; `curl`
-must also be available. From the repository root, run:
+Install `yt-dlp` separately, or set `YTDLP_BIN` to an existing executable. From the repository root, run:
 
 ```sh
 npx tsx scripts/refresh-learning-catalog.ts --check
@@ -93,8 +92,8 @@ npx tsx scripts/refresh-learning-catalog.ts
 ```
 
 The first command fetches and validates without writing. The second fetches both
-complete public playlists using yt-dlp's metadata-only mode and checks the English
-Prabhupada allowlist with YouTube oEmbed. It requires no API key, account cookies,
+complete public playlists using yt-dlp's metadata-only mode. It preserves the
+separate Acharya snapshot rather than restoring the old one-video selection. It requires no API key, account cookies,
 or media download. yt-dlp is a maintenance prerequisite, not an application runtime
 dependency. Public metadata extraction can change; this is not a claim that
 YouTube guarantees the extraction format as a stable API.
@@ -105,6 +104,27 @@ the saved catalog is replaced. A failure leaves the existing snapshot intact.
 Review the resulting source diff and this document's snapshot counts after a
 refresh. It never commits, pushes, deploys, or changes a remote playlist.
 
+## In-app Acharya sync
+
+Authenticated readers can select **Sync lectures** in the Prabhupada window.
+`GET /api/lectures/acharya` reads the latest published catalog, falling back to the
+bundled verified snapshot. `POST` with `{ "action": "sync" }` advances one bounded
+chunk of the channel scan. Requests accept no user-supplied source URLs, channel
+IDs, video IDs, or pagination cursors. The source is fixed on the server.
+
+The server follows upload-page continuations and checks duration-eligible watch
+metadata. Cached classifications limit repeated requests. It stages a complete
+scan before publishing; interrupted or failed scans retain the previous catalog.
+The UI reports progress and can pause/resume. Sync never downloads video, audio,
+or transcripts and needs no personal YouTube credentials or API key. YouTube's
+public metadata format and throttling are outside this app's control; a failed
+request is reported and can be retried, rather than shown as a successful sync.
+
+The first library keeps publisher upload order. Existing published lectures keep
+their queue positions, and newly found matching lectures are appended. Removed
+or disqualified videos leave discovery without deleting personal progress. The
+two guided series retain all their lessons in session order.
+
 ## Playback progress
 
 YouTube's [IFrame API](https://developers.google.com/youtube/iframe_api_reference)
@@ -114,3 +134,11 @@ embedding does not provide access to the user's YouTube watch history. Restore a
 saved video and timestamp through a visible Resume action, account for keyframe
 seek precision, and handle browsers blocking autoplay. Learning progress is not
 evidence that the user watched attentively.
+
+The iframe is prepared on opening a lesson. A user's Play click calls the ready
+player directly instead of waiting for script/iframe creation after the click.
+Bookmark restoration cues the saved timestamp without triggering autoplay.
+Natural video completion saves the completed state and offers **Next lecture** or
+**Next lesson**; the next video waits for a deliberate Play action. Manual marks
+and seeks do not manufacture watched minutes. The Japa instruction form appears
+only in Soulful Japa.

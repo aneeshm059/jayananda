@@ -61,6 +61,42 @@ describe('YouTube API loading and recovery', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it('does not start another network request when the API was prepared before mounting', async () => {
+    browser.YT = api;
+    const { loadYouTube } = await import('../lib/youtube-player');
+    await expect(loadYouTube()).resolves.toBe(api);
+    expect(scripts).toHaveLength(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('waits for Player to exist rather than treating the first script load as readiness', async () => {
+    const { loadYouTube } = await import('../lib/youtube-player');
+    const ready = vi.fn();
+    const loading = loadYouTube();
+    void loading.then(ready);
+    scripts[0].onload!();
+    await Promise.resolve();
+    expect(ready).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(1);
+    browser.YT = api;
+    browser.onYouTubeIframeAPIReady!();
+    await expect(loading).resolves.toBe(api);
+    expect(ready).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('uses the script-load fallback without replacing a newer widget callback', async () => {
+    const { loadYouTube } = await import('../lib/youtube-player');
+    const loading = loadYouTube();
+    const newerCallback = vi.fn();
+    browser.onYouTubeIframeAPIReady = newerCallback;
+    browser.YT = api;
+    scripts[0].onload!();
+    await expect(loading).resolves.toBe(api);
+    expect(browser.onYouTubeIframeAPIReady).toBe(newerCallback);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('allows a clean retry after a blocked or failed script request', async () => {
     const { loadYouTube } = await import('../lib/youtube-player');
     const first = loadYouTube();
@@ -91,6 +127,20 @@ describe('YouTube API loading and recovery', () => {
     browser.YT = api;
     abandonedReady();
     expect(browser.onYouTubeIframeAPIReady).not.toBeUndefined();
+    browser.onYouTubeIframeAPIReady!();
+    await expect(retry).resolves.toBe(api);
+  });
+
+  it('allows recovery when a ready callback arrives without a usable Player constructor', async () => {
+    const { loadYouTube } = await import('../lib/youtube-player');
+    const first = loadYouTube();
+    const rejection = expect(first).rejects.toThrow('could not load');
+    browser.onYouTubeIframeAPIReady!();
+    await rejection;
+    expect(scripts[0].removed).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+    const retry = loadYouTube();
+    browser.YT = api;
     browser.onYouTubeIframeAPIReady!();
     await expect(retry).resolves.toBe(api);
   });

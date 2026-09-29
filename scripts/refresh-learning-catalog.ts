@@ -1,17 +1,14 @@
 /**
  * Refresh the checked-in, API-key-free learning catalog from public metadata.
  * Run: npx tsx scripts/refresh-learning-catalog.ts
- * Requires yt-dlp on PATH (or YTDLP_BIN) and curl. No media is downloaded.
+ * Requires yt-dlp on PATH (or YTDLP_BIN). No media is downloaded.
+ * Acharya uses its separate verified snapshot and the in-app Sync lectures action.
  * --check fetches and validates metadata without modifying the catalog.
  */
 import { execFile } from 'node:child_process';
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
-import {
-  englishPrabhupadaSelections,
-  type LearningCourse,
-  type Lesson,
-} from '../lib/domain/learning-catalog';
+import { learningCourses, type LearningCourse, type Lesson } from '../lib/domain/learning-catalog';
 
 const runFile = promisify(execFile);
 const expectedChannelId = 'UCaL10tuZXQpURxqH2o1C2Jw';
@@ -137,50 +134,20 @@ async function playlistCourse(source: (typeof playlistSources)[number]): Promise
   return { ...source, sourceUrl, lessons };
 }
 
-async function prabhupadaCourse(): Promise<LearningCourse> {
-  const lessons = await Promise.all(
-    englishPrabhupadaSelections.map(async (selection, index): Promise<Lesson> => {
-      const { id } = selection;
-      const url = new URL('https://www.youtube.com/oembed');
-      url.searchParams.set('url', `https://www.youtube.com/watch?v=${id}`);
-      url.searchParams.set('format', 'json');
-      const { stdout } = await runFile(
-        'curl',
-        ['--fail', '--silent', '--show-error', '--location', '--max-time', '25', url.toString()],
-        { timeout: 30_000, maxBuffer: 1024 * 1024 },
-      );
-      const data = object(JSON.parse(stdout));
-      if (
-        data.author_name !== 'The Acharya' ||
-        data.author_url !== 'https://www.youtube.com/@TheAcharya1'
-      )
-        throw new Error(`Unexpected author for ${id}; catalog not written.`);
-      const title = nonemptyText(data.title, 'video title');
-      if (title !== selection.title)
-        throw new Error(
-          `Recheck the verified English selection ${id}: its title changed; catalog not written.`,
-        );
-      // oEmbed does not expose a duration. Do not invent one.
-      return { id, title, position: index + 1 };
-    }),
-  );
-  console.log(`Śrīla Prabhupāda: ${lessons.length} verified English selections from The Acharya.`);
-  return {
-    id: 'prabhupada',
-    title: 'Hear Śrīla Prabhupāda',
-    subtitle: 'Selected English lectures · The Acharya',
-    speaker: 'Śrīla Prabhupāda',
-    playlistId: '',
-    sourceUrl: 'https://www.youtube.com/channel/UCDTX-lo7YZCg_P28_Mo4NOg',
-    dailyMinutes: 30,
-    lessons,
-  };
-}
-
 async function main() {
   if (process.argv.slice(2).some((arg) => arg !== '--check'))
     throw new Error('Only --check is supported. This script refreshes local source files.');
-  const courses = await Promise.all([...playlistSources.map(playlistCourse), prabhupadaCourse()]);
+  const courses = await Promise.all(playlistSources.map(playlistCourse));
+  const prabhupada = learningCourses.find((course) => course.id === 'prabhupada')!;
+  const serializedCourses =
+    '[' +
+    courses.map((course) => JSON.stringify(course, null, 2)).join(',\n') +
+    ',\n' +
+    JSON.stringify({ ...prabhupada, lessons: [] }, null, 2).replace(
+      '"lessons": []',
+      '"lessons": bundledAcharyaLectures.map((lesson, index) => ({ ...lesson, position: index + 1 }))',
+    ) +
+    ']';
   if (process.argv.includes('--check')) return;
   const catalogUrl = new URL('../lib/domain/learning-catalog.ts', import.meta.url);
   const existing = await readFile(catalogUrl, 'utf8');
@@ -196,7 +163,7 @@ async function main() {
     `${typeDefinitions}\n\n// Public metadata snapshot: ${generatedAt}\n` +
     '// Refreshed with scripts/refresh-learning-catalog.ts. See docs/LEARNING-SOURCES.md.\n' +
     '// Unique videos follow video-session order; original positions remain on each lesson.\n' +
-    `${marker}${JSON.stringify(courses, null, 2)};\n`;
+    `${marker}${serializedCourses};\n`;
   const temporaryUrl = new URL('../lib/domain/learning-catalog.ts.tmp', import.meta.url);
   await writeFile(temporaryUrl, output, 'utf8');
   await rename(temporaryUrl, catalogUrl);

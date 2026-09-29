@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { englishPrabhupadaSelections, learningCourses } from '../lib/domain/learning-catalog';
+import { learningCourses } from '../lib/domain/learning-catalog';
+import { bundledAcharyaLectures } from '../lib/domain/acharya-catalog';
 import { parseCompanionValue, type CourseProgress } from '../lib/domain/companion';
 
 describe('English-only learning selections', () => {
-  it('keeps the saved Prabhupada catalog aligned with the refresh allowlist', () => {
+  it('ships the verified English 30–45 minute library and preserves lesson order', () => {
     const course = learningCourses.find((item) => item.id === 'prabhupada')!;
-    expect(englishPrabhupadaSelections).toEqual([
-      { id: 'V6hmXsFUy2w', title: 'Knowledge | Srila Prabhupada English Lecture' },
-    ]);
-    expect(course.lessons.map(({ id, title }) => ({ id, title }))).toEqual(
-      englishPrabhupadaSelections,
+    expect(course.lessons.length).toBeGreaterThan(1);
+    expect(course.lessons).toEqual(
+      bundledAcharyaLectures.map((lesson, index) => ({ ...lesson, position: index + 1 })),
     );
+    expect(
+      course.lessons.every(
+        (lesson) => lesson.durationSeconds! >= 1800 && lesson.durationSeconds! <= 2700,
+      ),
+    ).toBe(true);
+    expect(course.lessons.some((lesson) => lesson.id === 'V6hmXsFUy2w')).toBe(false);
     expect(course.subtitle).toContain('English');
     for (const item of learningCourses) {
       expect(item.subtitle).not.toMatch(/\bHindi\b/i);
