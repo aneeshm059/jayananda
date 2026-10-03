@@ -63,6 +63,36 @@ export async function putSettings(userId: string, input: unknown) {
   ]);
   return settings;
 }
+export async function putTheme(userId: string, input: unknown) {
+  const { theme } = z
+    .object({ theme: z.enum(['light', 'dark', 'system']) })
+    .strict()
+    .parse(input);
+  const current = await getSettings(userId);
+  const db = database();
+  await db.batch([
+    db
+      .insert(userSettings)
+      .values({
+        userId,
+        value: JSON.stringify({ ...current, theme }),
+        updatedAt: new Date().toISOString(),
+      })
+      .onConflictDoUpdate({
+        target: userSettings.userId,
+        set: {
+          // Preserve settings saved by another tab after the read above.
+          value: sql`json_set(${userSettings.value}, '$.theme', ${theme})`,
+          updatedAt: new Date().toISOString(),
+        },
+      }),
+    db.insert(appPreferences).values({ userId, theme, hero: current.hero }).onConflictDoUpdate({
+      target: appPreferences.userId,
+      set: { theme },
+    }),
+  ]);
+  return { theme };
+}
 export async function list(
   collection: Collection,
   userId: string,

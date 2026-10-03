@@ -33,8 +33,8 @@ export const learningCourses: LearningCourse[] = [
   {
     id: 'soulful-japa',
     title: 'Soulful Japa',
-    subtitle: 'Madhu Pandit Dasa · ISKCON Bangalore Sanga',
-    speaker: 'Madhu Pandit Dasa',
+    subtitle: 'His Grace Madhupandit Dasa · ISKCON Bangalore Sanga',
+    speaker: 'His Grace Madhupandit Dasa',
     playlistId: 'PLKVQRAZMT7-kNyVocJzO1MXqsvimBMOMy',
     dailyMinutes: 30,
     sourceUrl: 'https://www.youtube.com/playlist?list=PLKVQRAZMT7-kNyVocJzO1MXqsvimBMOMy',
@@ -887,7 +887,7 @@ export const learningCourses: LearningCourse[] = [
       {
         id: 'ryApMSDHYzg',
         title:
-          'Develop the Desire to Chant Each Round Attentively | Sri Madhu Pandit Dasa | Soulful Japa Training',
+          'Develop the Desire to Chant Each Round Attentively | His Grace Madhupandit Dasa | Soulful Japa Training',
         position: 100,
         sourcePosition: 119,
         durationSeconds: 1924,
@@ -897,8 +897,8 @@ export const learningCourses: LearningCourse[] = [
   {
     id: 'happiness-pleasure',
     title: 'Krishna Consciousness Happiness & Pleasure',
-    subtitle: 'Madhu Pandit Dasa · ISKCON Bangalore Sanga',
-    speaker: 'Madhu Pandit Dasa',
+    subtitle: 'His Grace Madhupandit Dasa · ISKCON Bangalore Sanga',
+    speaker: 'His Grace Madhupandit Dasa',
     playlistId: 'PLKVQRAZMT7-k1hMlGnAmNT8uMpfw68HNO',
     dailyMinutes: 30,
     sourceUrl: 'https://www.youtube.com/playlist?list=PLKVQRAZMT7-k1hMlGnAmNT8uMpfw68HNO',

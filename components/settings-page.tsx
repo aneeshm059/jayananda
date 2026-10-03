@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Download, Save, ArrowRight, Flower2 } from 'lucide-react';
 import {
   type AppState,
@@ -25,6 +25,9 @@ export function SettingsPage({
     [purpose, setPurpose] = useState(String(state.records.purpose[0]?.text || defaultPurpose)),
     [busy, setBusy] = useState(false),
     [error, setError] = useState('');
+  useEffect(() => {
+    setS((previous) => ({ ...previous, theme: state.settings.theme }));
+  }, [state.settings.theme]);
   const set = <K extends keyof Settings>(k: K, v: Settings[K]) =>
     setS((prev) => ({ ...prev, [k]: v }));
   async function submit(e: React.FormEvent) {
@@ -267,8 +270,8 @@ export function SettingsPage({
                     value={s.theme}
                     onChange={(e) => set('theme', e.target.value as Settings['theme'])}
                   >
-                    <option value="light">Warm ivory</option>
-                    <option value="dark">Warm dark</option>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
                     <option value="system">Follow device</option>
                   </select>
                 </label>

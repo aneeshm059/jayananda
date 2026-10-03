@@ -40,6 +40,19 @@ summaries, replacement prose, corrected quotations, or invented missing modules.
   Twenty small Telegram attachment-icon placements are documented as interface
   decoration and excluded.
 
+The PDF places all 195 substantive figures with a vertical reflection. Extracted
+embedded bytes alone do not carry that page transform. The audited manifest in
+`data/soulful-japa-image-orientation.json` identifies those exact assets; the
+reader and full-screen viewer reproduce the reflection with CSS. Original asset
+hashes remain unchanged. Run `scripts/audit-soulful-image-orientation.py` with the
+supplied PDF to verify each placement matrix, source bounding box, and image hash.
+Future or unrelated images are not automatically reflected.
+
+At the user's request, visible author names use **His Grace Madhupandit Dasa**.
+This is a presentation-only substitution for the name and honorific variants;
+the archived text and database source are unchanged. Text inside original image
+pixels is preserved as printed.
+
 Module 108 ends on page 419 before **SIXTEEN BHAAVANAS FOR 16 MALAS OF SOULFUL
 JAPA**, where the cue-card supplement begins. The index is retained independently
 on pages 573–580, including its numbering discrepancies. The cover image on page

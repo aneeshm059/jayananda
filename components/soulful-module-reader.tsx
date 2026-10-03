@@ -24,6 +24,8 @@ import type {
   SoulfulProgressResponse,
 } from '@/lib/domain/soulful-reading';
 import { MalaIcon } from './mala-icon';
+import { SoulfulSourceFigure } from './soulful-source-figure';
+import { respectfulAuthor, soulfulAuthor } from '@/lib/domain/display-names';
 
 function pendingKey(readerKey: string, id: string) {
   return `jayananda:soulful-pending:${readerKey}:${id}`;
@@ -145,7 +147,7 @@ export function SoulfulModuleReader() {
         <h1>
           Soulful Japa<span>A little reading. A more attentive round.</span>
         </h1>
-        <p>The written modules by {library?.source?.author || 'Madhu Pandit Dasa'}.</p>
+        <p>The written modules by {respectfulAuthor(library?.source?.author || soulfulAuthor)}.</p>
       </header>
       {error && (
         <div className="soulful-message" role="alert">
@@ -515,7 +517,9 @@ function ModulePage({
             </span>
             <h2 id="soulful-module-title">{data.module.title}</h2>
             <p>
-              {data.module.kind === 'module' ? data.source.author : 'From the supplied source'}{' '}
+              {data.module.kind === 'module'
+                ? respectfulAuthor(data.source.author)
+                : 'From the supplied source'}{' '}
               <span>·</span> PDF{' '}
               {data.module.startPage === data.module.endPage
                 ? `page ${data.module.startPage}`
@@ -571,31 +575,13 @@ function ModulePage({
 
 function SourceBlock({ block, index }: { block: SoulfulBlock; index: number }) {
   const attributes = { 'data-source-page': block.page, id: 'source-block-' + index };
-  if (block.type === 'image')
-    return (
-      <figure {...attributes}>
-        <a
-          href={block.src}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Open original illustration from page ${block.page}`}
-        >
-          <img
-            src={block.src}
-            alt={block.alt || `Illustration from source page ${block.page}`}
-            width={block.width}
-            height={block.height}
-            loading="lazy"
-          />
-        </a>
-        {block.text && <figcaption>{block.text}</figcaption>}
-      </figure>
-    );
-  if (block.type === 'heading') return <h3 {...attributes}>{block.text}</h3>;
-  if (block.type === 'quote') return <blockquote {...attributes}>{block.text}</blockquote>;
+  if (block.type === 'image') return <SoulfulSourceFigure block={block} index={index} />;
+  if (block.type === 'heading') return <h3 {...attributes}>{respectfulAuthor(block.text)}</h3>;
+  if (block.type === 'quote')
+    return <blockquote {...attributes}>{respectfulAuthor(block.text)}</blockquote>;
   return (
     <p {...attributes} className={block.type === 'verse' ? 'soulful-verse' : undefined}>
-      {block.text}
+      {respectfulAuthor(block.text)}
     </p>
   );
 }

@@ -36,6 +36,7 @@ import { HearingCompanion, LearningCompanion } from './learning-companion';
 import { ReadingCompanion } from './reading-companion';
 import { JapaSanctuary } from './japa-sanctuary';
 import { MalaIcon } from './mala-icon';
+import { ThemeToggle } from './theme-toggle';
 import { request } from '@/lib/client';
 import type { Habit, HabitInput, HabitCheckinInput, HabitCheckin } from '@/lib/domain/habits';
 const TodayReport = lazy(() => import('./today-report').then((m) => ({ default: m.TodayReport })));
@@ -445,6 +446,16 @@ function JournalWorkspace() {
           </span>
           <div className="top-actions">
             <span className="private-label">Just you and your practice</span>
+            <ThemeToggle
+              theme={state.settings.theme}
+              onSaved={(theme) => {
+                setState((previous) =>
+                  previous ? { ...previous, settings: { ...previous.settings, theme } } : previous,
+                );
+                // Supersede any older in-flight refresh, keeping all journal data current.
+                void refresh(date).catch((e) => setError(e.message));
+              }}
+            />
             {isTodayPage ? (
               <time className="automatic-date" dateTime={state.today}>
                 {prettyDate(state.today, { day: 'numeric', month: 'short' })}

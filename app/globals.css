@@ -465,6 +465,35 @@ details[open] summary {
   align-items: center;
   gap: 18px;
 }
+.theme-control {
+  position: relative;
+  flex: 0 0 auto;
+}
+.theme-toggle {
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.theme-error {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: min(250px, 70vw);
+  z-index: 70;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+}
+.topbar .breadcrumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar .top-actions {
+  flex-shrink: 0;
+}
 .private-label {
   font-family: Georgia, serif;
   color: var(--muted);

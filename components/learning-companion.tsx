@@ -78,7 +78,7 @@ export function HearingCompanion({
       )}
       <div className="home-learning-row">
         <div>
-          <span className="eyebrow">A GUIDED SERIES · MADHU PANDIT PRABHU</span>
+          <span className="eyebrow">A GUIDED SERIES · His Grace Madhupandit Dasa</span>
           <h2>Learn, a little each day.</h2>
           <p>Your lessons stay in sequence, with a bookmark of their own.</p>
         </div>

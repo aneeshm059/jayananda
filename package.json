@@ -58,6 +58,7 @@
     "setup:local": "tsx scripts/setup-local.ts",
     "test:bootstrap": "tsx scripts/bootstrap-test.ts",
     "test:soulful": "tsx scripts/soulful-reading-integration.ts",
+    "test:appearance": "tsx scripts/appearance-integration.ts",
     "soulful:import": "tsx scripts/import-soulful-japa.ts"
   },
   "engines": {

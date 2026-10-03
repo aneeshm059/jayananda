@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pencil, Trash2, BookOpen } from 'lucide-react';
 import { type Collection, type Entry } from '@/lib/domain/model';
 import { forms } from '@/lib/domain/forms';
+import { respectfulAuthor } from '@/lib/domain/display-names';
 import { prettyDate } from '@/lib/domain/dates';
 import type { Actions } from './journal-app';
 export function EntryList({
@@ -42,23 +43,25 @@ export function EntryList({
             </div>
             <div className="entry-body">
               <h3>
-                {String(
-                  entry.title ||
-                    entry.book ||
-                    entry.service ||
-                    entry.person ||
-                    (collection === 'japa'
-                      ? `${entry.rounds} rounds`
-                      : collection === 'krishna'
-                        ? `Krishna Book${entry.chapterNumber ? ' · Chapter ' + entry.chapterNumber : ''}`
-                        : entry.quality || forms[collection].title),
+                {respectfulAuthor(
+                  String(
+                    entry.title ||
+                      entry.book ||
+                      entry.service ||
+                      entry.person ||
+                      (collection === 'japa'
+                        ? `${entry.rounds} rounds`
+                        : collection === 'krishna'
+                          ? `Krishna Book${entry.chapterNumber ? ' · Chapter ' + entry.chapterNumber : ''}`
+                          : entry.quality || forms[collection].title),
+                  ),
                 )}
               </h3>
               <p className="entry-meta">
                 {entry.durationMinutes !== undefined && `${entry.durationMinutes} min`}
                 {entry.startTime && ` · ${entry.startTime}`}
                 {entry.attention && ` · Attention ${entry.attention}/5`}
-                {entry.speaker && ` · ${entry.speaker}`}
+                {entry.speaker && ` · ${respectfulAuthor(String(entry.speaker))}`}
                 {entry.category && ` · ${entry.category}`}
                 {entry.chapterCompleted ? ' · Chapter completed' : ''}
               </p>

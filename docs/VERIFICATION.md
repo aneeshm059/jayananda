@@ -1,5 +1,14 @@
 # Release verification
 
+## Reader images, honorifics and appearance — 3 October 2026
+
+- Audited all 195 substantive image placement matrices against the supplied PDF, including graphics-state transforms and exact bounding boxes. Each requires a vertical reflection. Reader images and the full-screen viewer apply the audited transform; every original asset hash and the database content version remain unchanged.
+- Added a full-viewport image dialog with fit, zoom, scroll/pan, keyboard Escape, focus containment and return, and restored background scrolling on close. Compared the cover and module 51 diagram visually with the source. Desktop and 320/390px phone layouts fit without horizontal page overflow; the close control remains reachable while zoomed.
+- App author/speaker labels, source-name display and existing journal speaker/title display use “His Grace Madhupandit Dasa.” Stored source text, journal history and original image pixels are unchanged.
+- Added a visible sun/moon switch using the existing saved light/dark/system preference. The theme-only API updates settings and appearance atomically, preserves other preferences (including concurrent changes), and rejects anonymous, cross-origin and invalid writes. Settings retains unsaved unrelated fields when the header switch changes the theme.
+- TypeScript, all 172 unit tests, all 13 compatibility checks, the production build and Wrangler deployment dry run pass. All 198 local Worker/D1 assertions pass: the existing 187 plus 11 new appearance checks. A local sign-in rate limit required spacing the sequential suites; the rerun passed without changing authentication behavior.
+- Browser verification covers upright inline/full-screen images, zoom/fit, keyboard focus and Escape, theme persistence after reload, phone layouts, author labels, and failed-save recovery. Stopping the local Worker leaves the previous theme intact and shows an error; retry after recovery saves correctly. Browser size, local fixture theme and temporary reading marks were restored. No new migration or source-content import is required.
+
 ## Written Soulful Japa reader — 3 October 2026
 
 - Imported the supplied 583-page PDF as 106 numbered module entries and 22 supplements, with 149 printed module/part headings and all 195 original figure placements. Independent source audits match all retained characters in page order; six persistent content tests protect the audited text, headings, numbering and image hashes. Source gaps, placeholders and encodings are documented rather than rewritten.

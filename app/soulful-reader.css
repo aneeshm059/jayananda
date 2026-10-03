@@ -385,6 +385,110 @@
   margin-top: 12px;
   white-space: pre-line;
 }
+.soulful-image-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--sj-muted);
+  cursor: zoom-in;
+}
+.soulful-image-open > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 12px;
+  font: 12px var(--font-sans);
+}
+.soulful-image-open:focus-visible {
+  outline: 2px solid var(--sj-accent);
+  outline-offset: 6px;
+}
+.soulful-image-viewer[open] {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+.soulful-image-viewer::backdrop {
+  background: #000b;
+}
+.soulful-image-toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px
+    max(12px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 13px;
+}
+.soulful-image-toolbar > span {
+  margin-right: auto;
+}
+.soulful-image-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.soulful-image-toolbar .icon-button {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+.soulful-image-toolbar .text-button {
+  min-width: 36px;
+  min-height: 44px;
+}
+.soulful-image-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.soulful-image-canvas {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.soulful-image-canvas img {
+  display: block;
+  flex: none;
+  max-width: none;
+  object-fit: contain;
+}
+.soulful-image-help {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 10px 16px max(10px, env(safe-area-inset-bottom));
+  font-size: 12px;
+  text-align: center;
+  color: var(--muted);
+}
+@media (max-width: 400px) {
+  .soulful-image-toolbar {
+    gap: 2px;
+    font-size: 11px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .soulful-image-toolbar > div {
+    gap: 0;
+  }
+}
 .soulful-completion {
   display: flex;
   flex-direction: column;
