@@ -178,6 +178,9 @@ export function PillarHome({ state, actions }: { state: AppState; actions: Actio
           <span className="eyebrow">LEARN TO CHANT WITH CARE</span>
           <h2>A lesson for your next round.</h2>
           <p>Follow Soulful Japa in sequence. A half-hour at a time.</p>
+          <Link href="/soulful-japa" className="soulful-reading-link">
+            <BookOpen size={16} /> Read the written modules <ArrowRight size={15} />
+          </Link>
         </div>
         <CourseShortcut id="soulful-japa" />
       </div>
@@ -341,7 +344,10 @@ export function ChantCompanion({
         <div>
           <span className="eyebrow">LEARN · THEN BRING IT TO YOUR JAPA</span>
           <h2>Soulful Japa, day by day.</h2>
-          <p>One course. Your own steady pace.</p>
+          <p>Watch the lessons. Spend a little time with the written modules.</p>
+          <Link href="/soulful-japa" className="soulful-reading-link">
+            <BookOpen size={16} /> Read modules <ArrowRight size={15} />
+          </Link>
         </div>
         <CourseShortcut id="soulful-japa" />
       </div>

@@ -1,0 +1,550 @@
+@font-face {
+  font-family: 'Literata';
+  src: url('/fonts/literata/regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Literata';
+  src: url('/fonts/literata/semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+.soulful-reading-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.soulful-video-reading-link {
+  margin: 0 0 24px;
+}
+.soulful-reader {
+  --sj-paper: #fffdf7;
+  --sj-ink: #393b32;
+  --sj-muted: #767365;
+  --sj-accent: #776344;
+  --sj-line: #e7e0d1;
+  --sj-soft: #f0ede3;
+  max-width: 1180px;
+  margin: auto;
+}
+:root[data-theme='dark'] .soulful-reader {
+  --sj-paper: #252c30;
+  --sj-ink: #eee7d8;
+  --sj-muted: #bab6aa;
+  --sj-accent: #dbc39a;
+  --sj-line: #414748;
+  --sj-soft: #313b3e;
+}
+.soulful-toplinks {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.soulful-intro {
+  padding: 10px 0 32px;
+}
+.soulful-intro > .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--sj-accent);
+}
+.soulful-intro h1 {
+  margin: 13px 0 14px;
+  color: var(--sj-ink);
+  font-family: Literata, Georgia, serif;
+  font-size: clamp(32px, 3.6vw, 46px);
+  letter-spacing: -1.7px;
+}
+.soulful-intro h1 span {
+  display: block;
+  margin-top: 10px;
+  font-size: clamp(17px, 2vw, 23px);
+  letter-spacing: -0.4px;
+  font-weight: 400;
+  color: var(--sj-muted);
+}
+.soulful-intro > p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sj-muted);
+}
+.soulful-library-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 17px 0;
+  border-top: 1px solid var(--sj-line);
+  border-bottom: 1px solid var(--sj-line);
+  margin-bottom: 24px;
+}
+.soulful-library-bar > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--sj-muted);
+  font-size: 12px;
+}
+.soulful-library-bar progress {
+  height: 4px;
+  width: 120px;
+  max-width: 30%;
+  margin-left: auto;
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  color: var(--sj-accent);
+  background: var(--sj-line);
+}
+.soulful-library-bar progress::-webkit-progress-bar {
+  background: var(--sj-line);
+}
+.soulful-library-bar progress::-webkit-progress-value {
+  background: var(--sj-accent);
+}
+.soulful-library-bar progress::-moz-progress-bar {
+  background: var(--sj-accent);
+}
+.soulful-library-toggle {
+  display: none;
+}
+.soulful-layout {
+  display: grid;
+  grid-template-columns: 242px minmax(0, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+.soulful-library {
+  position: sticky;
+  top: 92px;
+  min-width: 0;
+}
+.soulful-library-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 9px;
+  background: var(--sj-soft);
+}
+.soulful-library-tabs button {
+  flex: 1;
+  padding: 9px 4px;
+  font-size: 12px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--sj-muted);
+  background: transparent;
+}
+.soulful-library-tabs button[aria-pressed='true'] {
+  background: var(--sj-paper);
+  color: var(--sj-ink);
+  box-shadow: 0 1px 5px #302b1b0c;
+}
+.soulful-search {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 12px;
+  padding: 8px 9px;
+  border: 1px solid var(--sj-line);
+  border-radius: 7px;
+  color: var(--sj-muted);
+  background: transparent;
+}
+.soulful-search input {
+  min-width: 0;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--sj-ink);
+}
+.soulful-module-list {
+  max-height: min(61vh, 690px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-right: 5px;
+}
+.soulful-module-choice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 8px;
+  margin: 0 0 4px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  text-align: left;
+  color: var(--sj-muted);
+}
+.soulful-module-choice:hover {
+  background: var(--sj-soft);
+}
+.soulful-module-choice.active {
+  background: var(--sj-paper);
+  border-color: var(--sj-line);
+  color: var(--sj-ink);
+}
+.soulful-module-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 26px;
+  height: 26px;
+  border: 1px solid var(--sj-line);
+  border-radius: 50%;
+  font-size: 10px;
+}
+.soulful-module-mark.read {
+  background: var(--sj-soft);
+  color: var(--sj-accent);
+}
+.soulful-module-choice > span:last-child {
+  min-width: 0;
+}
+.soulful-module-choice small {
+  display: block;
+  font-size: 10px;
+  margin-bottom: 3px;
+}
+.soulful-module-choice strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.soulful-source-note {
+  border-top: 1px solid var(--sj-line);
+  margin-top: 16px;
+  padding-top: 14px;
+  font-size: 11px;
+  line-height: 1.75;
+  color: var(--sj-muted);
+}
+.soulful-source-note summary {
+  cursor: pointer;
+}
+.soulful-source-note p {
+  margin-top: 10px;
+}
+.soulful-no-results {
+  padding: 18px 8px;
+  font-size: 12px;
+  color: var(--sj-muted);
+}
+.soulful-reading-column {
+  min-width: 0;
+  scroll-margin-top: 92px;
+}
+.soulful-reader-tools {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 16px;
+  min-height: 38px;
+}
+.soulful-reader-tools > span {
+  color: var(--sj-muted);
+  font-size: 12px;
+}
+.soulful-reader-tools > div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.soulful-reader-tools button {
+  font-family: Literata, Georgia, serif;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  width: 40px;
+  height: 36px;
+  color: var(--sj-muted);
+  background: transparent;
+}
+.soulful-reader-tools button[aria-pressed='true'] {
+  background: var(--sj-paper);
+  border-color: var(--sj-line);
+  color: var(--sj-ink);
+}
+.soulful-paper {
+  padding: clamp(24px, 4vw, 62px);
+  background: var(--sj-paper);
+  border: 1px solid var(--sj-line);
+  border-radius: 12px;
+  box-shadow: 0 9px 36px #42381b04;
+  color: var(--sj-ink);
+}
+.soulful-paper-heading {
+  padding-bottom: 34px;
+  margin-bottom: 36px;
+  border-bottom: 1px solid var(--sj-line);
+}
+.soulful-paper-heading .eyebrow {
+  color: var(--sj-accent);
+}
+.soulful-paper-heading h2 {
+  margin: 14px 0 20px;
+  font-family: Literata, Georgia, serif;
+  font-size: clamp(26px, 2.8vw, 36px);
+  line-height: 1.36;
+  letter-spacing: -0.8px;
+  overflow-wrap: anywhere;
+}
+.soulful-paper-heading > p {
+  color: var(--sj-muted);
+  font-size: 11px;
+  line-height: 1.9;
+  margin: 0;
+}
+.soulful-paper-heading > p > span {
+  margin: 0 7px;
+}
+.soulful-read-badge {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--sj-accent);
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--sj-soft);
+  margin-top: 16px;
+}
+.soulful-prose {
+  font-family: Literata, Georgia, 'Times New Roman', serif;
+  font-size: var(--soulful-text-size, 20px);
+  line-height: 1.9;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.soulful-prose p,
+.soulful-prose blockquote {
+  font-size: inherit;
+  margin: 0 0 1.4em;
+  line-height: inherit;
+  color: inherit;
+  white-space: pre-line;
+}
+.soulful-prose h3 {
+  font-family: inherit;
+  font-size: 1.05em;
+  font-weight: 600;
+  line-height: 1.65;
+  letter-spacing: -0.15px;
+  margin: 2.2em 0 1em;
+  white-space: pre-line;
+}
+.soulful-prose > :first-child {
+  margin-top: 0;
+}
+.soulful-prose blockquote {
+  padding: 0.15em 0 0.15em 1.2em;
+  border-left: 2px solid var(--sj-line);
+}
+.soulful-prose .soulful-verse {
+  font-size: 0.96em;
+  color: var(--sj-accent);
+  line-height: 1.8;
+  margin: 1.7em 0;
+}
+.soulful-prose figure {
+  margin: 2em 0;
+}
+.soulful-prose figure img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  margin: auto;
+  border-radius: 3px;
+}
+.soulful-prose figcaption {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--sj-muted);
+  margin-top: 12px;
+  white-space: pre-line;
+}
+.soulful-completion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+  border-top: 1px solid var(--sj-line);
+  margin-top: 46px;
+  padding-top: 32px;
+}
+.soulful-end-ornament {
+  color: var(--sj-accent);
+  font-size: 20px;
+}
+.soulful-completion > p {
+  font:
+    400 17px/1.75 Literata,
+    Georgia,
+    serif;
+  margin: 0;
+}
+.soulful-completion small {
+  color: var(--sj-muted);
+  font-size: 10px;
+}
+.soulful-save-status {
+  min-height: 23px;
+  margin: 10px 2px;
+  font-size: 11px;
+  color: var(--sj-muted);
+}
+.soulful-page-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 8px 0 30px;
+}
+.soulful-page-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--sj-soft);
+  color: var(--sj-ink);
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+}
+.soulful-page-nav small {
+  display: block;
+  color: var(--sj-muted);
+  font-size: 10px;
+}
+.soulful-page-nav button:last-child {
+  text-align: right;
+}
+.soulful-sequence-end {
+  font-size: 12px;
+  color: var(--sj-muted);
+}
+.soulful-message {
+  padding: 16px;
+  margin-bottom: 18px;
+  border: 1px solid var(--sj-line);
+  background: var(--sj-soft);
+  border-radius: 9px;
+}
+.soulful-message p {
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.soulful-message > div {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+@media (max-width: 1100px) {
+  .soulful-layout {
+    grid-template-columns: 205px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .soulful-paper {
+    padding: 32px;
+  }
+}
+@media (max-width: 900px) {
+  .soulful-layout {
+    display: block;
+  }
+  .soulful-library {
+    display: none;
+    position: static;
+    padding-bottom: 24px;
+  }
+  .soulful-library.is-open {
+    display: block;
+  }
+  .soulful-module-list {
+    max-height: 380px;
+  }
+  .soulful-library-toggle {
+    display: inline-flex;
+    gap: 7px;
+    align-items: center;
+    border: 0;
+    background: transparent;
+    padding: 7px 0;
+    font-size: 12px;
+    color: var(--sj-ink);
+  }
+  .soulful-library-bar {
+    flex-wrap: wrap;
+    gap: 8px 20px;
+  }
+  .soulful-library-bar > span {
+    margin-left: auto;
+  }
+  .soulful-library-bar progress {
+    display: none;
+  }
+  .soulful-reading-column {
+    scroll-margin-top: 80px;
+  }
+}
+@media (max-width: 500px) {
+  .soulful-toplinks {
+    margin-bottom: 18px;
+    gap: 8px;
+  }
+  .soulful-toplinks .quiet-link {
+    font-size: 11px;
+  }
+  .soulful-intro {
+    padding-bottom: 24px;
+  }
+  .soulful-paper {
+    padding: 28px 19px;
+    border-radius: 9px;
+  }
+  .soulful-library-bar > span {
+    font-size: 10px;
+  }
+  .soulful-paper-heading h2 {
+    font-size: 28px;
+  }
+  .soulful-prose {
+    font-size: calc(var(--soulful-text-size, 20px) - 1px);
+    line-height: 1.85;
+  }
+  .soulful-prose blockquote {
+    padding-left: 0.7em;
+  }
+  .soulful-page-nav button {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .soulful-completion .button {
+    font-size: 12px;
+  }
+}

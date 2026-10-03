@@ -450,3 +450,79 @@ export const acharyaCatalog = sqliteTable(
   },
   (t) => [index('acharya_catalog_order').on(t.active, t.position)],
 );
+
+// Written Soulful Japa is versioned independently from the video courses. Imports
+// stage immutable content first, then publish one pointer after every part exists.
+export const soulfulReadingSources = sqliteTable('soulful_reading_sources', {
+  contentVersion: text('content_version').primaryKey(),
+  source: text('source').notNull(),
+  entryCount: integer('entry_count').notNull(),
+  importedAt: text('imported_at').notNull(),
+});
+export const soulfulReadingCatalog = sqliteTable('soulful_reading_catalog', {
+  id: text('id').primaryKey(),
+  contentVersion: text('content_version')
+    .notNull()
+    .references(() => soulfulReadingSources.contentVersion),
+  activatedAt: text('activated_at').notNull(),
+});
+export const soulfulReadingModules = sqliteTable(
+  'soulful_reading_modules',
+  {
+    id: text('id').primaryKey(),
+    contentVersion: text('content_version')
+      .notNull()
+      .references(() => soulfulReadingSources.contentVersion),
+    moduleId: text('module_id').notNull(),
+    kind: text('kind', { enum: ['module', 'supplement'] }).notNull(),
+    number: integer('number'),
+    label: text('label').notNull(),
+    title: text('title').notNull(),
+    startPage: integer('start_page').notNull(),
+    endPage: integer('end_page').notNull(),
+    blockCount: integer('block_count').notNull(),
+    partCount: integer('part_count').notNull(),
+    contentHash: text('content_hash').notNull(),
+    position: integer('position').notNull(),
+  },
+  (t) => [
+    uniqueIndex('soulful_module_version_id').on(t.contentVersion, t.moduleId),
+    index('soulful_module_order').on(t.contentVersion, t.position),
+  ],
+);
+export const soulfulReadingParts = sqliteTable(
+  'soulful_reading_parts',
+  {
+    id: text('id').primaryKey(),
+    moduleKey: text('module_key')
+      .notNull()
+      .references(() => soulfulReadingModules.id),
+    position: integer('position').notNull(),
+    value: text('value').notNull(),
+  },
+  (t) => [uniqueIndex('soulful_part_module_order').on(t.moduleKey, t.position)],
+);
+export const soulfulReadingProgress = sqliteTable(
+  'soulful_reading_progress',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    moduleId: text('module_id').notNull(),
+    completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
+    completedAt: text('completed_at'),
+    anchor: integer('anchor').notNull().default(0),
+    contentVersion: text('content_version').notNull(),
+    lastOpenedAt: text('last_opened_at'),
+    updatedAt: text('updated_at').notNull(),
+    version: integer('version').notNull(),
+    lastRequestId: text('last_request_id').notNull(),
+    lastRequest: text('last_request').notNull(),
+  },
+  (t) => [
+    uniqueIndex('soulful_progress_user_module').on(t.userId, t.moduleId),
+    check('soulful_progress_version_positive', sql`${t.version} > 0`),
+    check('soulful_progress_anchor_nonnegative', sql`${t.anchor} >= 0`),
+  ],
+);

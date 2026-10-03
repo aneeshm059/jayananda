@@ -3,6 +3,7 @@ import { getSettings, records, list } from '@/lib/db/repository';
 import { collections, type Collection } from '@/lib/domain/model';
 import { checkins, listHabits } from '@/lib/db/habits';
 import { companionItems } from '@/lib/db/companion';
+import { soulfulProgressForExport } from '@/lib/db/soulful-reading';
 import { localDate } from '@/lib/domain/dates';
 const cell = (v: unknown) =>
   '"' +
@@ -21,6 +22,7 @@ export const GET = (request: Request) =>
         JSON.stringify(
           {
             companion: await companionItems(user.id),
+            soulfulJapaReading: await soulfulProgressForExport(user.id),
             exportedAt: new Date().toISOString(),
             settings,
             records: await records(user.id),

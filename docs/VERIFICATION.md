@@ -1,5 +1,20 @@
 # Release verification
 
+## Written Soulful Japa reader — 3 October 2026
+
+- Imported the supplied 583-page PDF as 106 numbered module entries and 22 supplements, with 149 printed module/part headings and all 195 original figure placements. Independent source audits match all retained characters in page order; six persistent content tests protect the audited text, headings, numbering and image hashes. Source gaps, placeholders and encodings are documented rather than rewritten.
+- TypeScript, all 165 tests, all 13 vinext compatibility checks, and the production build pass. Backend tests cover immutable staged content, Unicode-safe chunking, checksum verification, authenticated routes, ownership, completion/undo, optimistic conflicts, safe retries and private JSON export.
+- All 187 local Worker/D1 assertions pass: 154 existing journal/companion/lecture/reading checks plus 33 new reader checks. The new suite compares all 128 returned entries and 5,453 blocks exactly with the final source dataset, and restores its two fixture progress rows.
+- Browser checks cover module completion ticks and reload persistence, returning to the next unfinished module, next/previous navigation, title search, the supplementary collection and its original images, completion/undo without inflating the numbered-module total, and retained text-size choice. Mobile selection uses native history updates to avoid an unnecessary server-page transition.
+- An interrupted local save remained pending, displayed an error and retried successfully when the server returned. Pending requests retain their UUID in account-scoped session storage; unload protection and explicit retry/reconciliation prevent a false success. Acknowledgements cannot clear a newer pending request.
+- Light and dark reader layouts were reviewed. Widths 320, 390 and 1440 showed no horizontal overflow; the original local theme and browser viewport were restored. Fonts are served locally under their OFL license. Repeated introductory headings appear once in the reading header, with every original part heading retained.
+- The original fixture-age assumption in the general integration harness was corrected to read a full year of sample history instead of assuming all 14 fixture days remain in the current month. A deliberately oversized request reveals a Miniflare connection-reuse limitation; the 413 validation check runs last. This is documented in the reader storage notes; shared application HTTP code is unchanged.
+- A private SQL backup and Time Travel bookmark were captured before production migration. New content and progress use additive tables; existing journal, video and Bhagavad-gītā data are not migrated or rewritten.
+
+Final source content version: `82c78926d66df1fcf0380617f4c8ec70b44a6dbaac132fcfcffd0b0e392384bf`.
+
+Production release verification will be recorded after deployment. Authenticated write checks use local fixtures only.
+
 ## Synced lecture library and playback — 29 September 2026
 
 The owner authorized testing and production release of the lecture-library changes.

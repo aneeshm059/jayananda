@@ -5,6 +5,7 @@ import './companion.css';
 import './gentle.css';
 import './pillars.css';
 import './reading-companion.css';
+import './soulful-reader.css';
 export const metadata = {
   title: 'Jayananda · My Sādhana Journey',
   description: 'A quiet companion for hearing, chanting, reading and service.',

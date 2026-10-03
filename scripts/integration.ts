@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { type Collection, type AppState, type Entry } from '../lib/domain/model';
 import { totals, health, onDate } from '../lib/domain/calculations';
+import { addDays } from '../lib/domain/dates';
 const base = process.env.TEST_BASE_URL || 'http://localhost:3000';
 if (!['localhost', '127.0.0.1'].includes(new URL(base).hostname))
   throw new Error('Integration tests are local-only.');
@@ -52,7 +53,9 @@ async function api<T>(
 }
 let state = await api<AppState>('/api/state');
 const date = state.today;
-check(state.records.japa.length >= 14, '14 days of local demo data load from D1');
+// Demo fixtures can cross a month boundary before the next development session.
+const demoHistory = await api<AppState>(`/api/state?from=${addDays(date, -365)}&to=${date}`);
+check(demoHistory.records.japa.length >= 14, '14 days of local demo data load from D1');
 check(
   !state.records.japa.some((e) => e.id === 'other-private-entry'),
   'Reads are scoped to signed-in user',

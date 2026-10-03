@@ -6,4 +6,4 @@ Generation direction: a premium cinematic wide still of a peaceful Indian devoti
 
 The master was resized/cropped and encoded with Sharp into `public/hero.webp` (1440×640) and `public/hero-mobile.webp` (720×600). CSS provides time-of-day treatments. No third-party image requests, remote fonts or video backgrounds are used. Replace both WebP assets and rebuild to change the artwork. Settings supports Automatic, Morning always, Minimal and No cinematic image; user image upload is a future feature.
 
-Icons are Lucide (ISC license). Typography uses system fonts. Quality-section text is clearly identified as app-written reflection prompts, not quotations from Śrīla Prabhupāda or Jayananda Prabhu.
+Icons are Lucide (ISC license). Typography uses system fonts outside the written Soulful Japa reader. That reader uses locally served Literata (regular and semibold) from Google Fonts, licensed under SIL Open Font License 1.1; the license is in `public/fonts/literata/OFL.txt`. No font requests are sent to Google from the app. Quality-section text is clearly identified as app-written reflection prompts, not quotations from Śrīla Prabhupāda or Jayananda Prabhu.

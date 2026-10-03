@@ -130,6 +130,11 @@ export function LearningCompanion({ state, actions }: { state: AppState; actions
           </Link>
         ))}
       </div>
+      {course.id === 'soulful-japa' && (
+        <Link href="/soulful-japa" className="soulful-reading-link soulful-video-reading-link">
+          Read the Soulful Japa modules <ArrowUpRight size={16} />
+        </Link>
+      )}
       {!ready || (course.id === 'prabhupada' && !library.ready) ? (
         <div className="empty-state">
           <p role="status">{error || 'Finding your saved place…'}</p>

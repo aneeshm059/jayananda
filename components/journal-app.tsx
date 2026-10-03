@@ -39,6 +39,9 @@ import { MalaIcon } from './mala-icon';
 import { request } from '@/lib/client';
 import type { Habit, HabitInput, HabitCheckinInput, HabitCheckin } from '@/lib/domain/habits';
 const TodayReport = lazy(() => import('./today-report').then((m) => ({ default: m.TodayReport })));
+const SoulfulModuleReader = lazy(() =>
+  import('./soulful-module-reader').then((m) => ({ default: m.SoulfulModuleReader })),
+);
 const HabitsPage = lazy(() => import('./habits-page').then((m) => ({ default: m.HabitsPage })));
 import { EntryForm } from './entry-form';
 import { FocusMode } from './focus-mode';
@@ -69,6 +72,7 @@ const nav = [
   ['today-report', 'Today Report', ClipboardList],
   ['journal', 'All practices', BookOpen],
   ['learn', 'My lessons', Play],
+  ['soulful-japa', 'Soulful Japa reading', BookOpen],
   ['habits', 'Habit Tracker', ListChecks],
   ['japa', 'Chant', MalaIcon],
   ['reading', 'Read', BookOpen],
@@ -107,7 +111,7 @@ function CompanionStatus() {
 }
 function JournalWorkspace() {
   const path = usePathname().split('/')[1] ?? '';
-  const isTodayPage = ['', 'habits', 'today-report', 'learn'].includes(path);
+  const isTodayPage = ['', 'habits', 'today-report', 'learn', 'soulful-japa'].includes(path);
   const [state, setState] = useState<AppState | null>(null),
     [date, setDate] = useState(''),
     [error, setError] = useState(''),
@@ -381,7 +385,10 @@ function JournalWorkspace() {
               label: 'Reflect & grow',
               slugs: ['reflection', 'jayananda', 'prabhupada', 'purpose'],
             },
-            { label: 'My journey', slugs: ['learn', 'history', 'weekly', 'monthly', 'settings'] },
+            {
+              label: 'My journey',
+              slugs: ['learn', 'soulful-japa', 'history', 'weekly', 'monthly', 'settings'],
+            },
           ].map((group) => (
             <details className="nav-group" key={group.label} open={group.slugs.includes(path)}>
               <summary>{group.label}</summary>
@@ -510,6 +517,8 @@ function JournalWorkspace() {
               <HearingCompanion state={state} actions={actions} date={date} />
             ) : path === 'learn' ? (
               <LearningCompanion state={state} actions={actions} />
+            ) : path === 'soulful-japa' ? (
+              <SoulfulModuleReader />
             ) : path === 'today-report' ? (
               <TodayReport state={state} actions={actions} />
             ) : path === 'habits' ? (
