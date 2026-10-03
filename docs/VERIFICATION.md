@@ -13,7 +13,9 @@
 
 Final source content version: `82c78926d66df1fcf0380617f4c8ec70b44a6dbaac132fcfcffd0b0e392384bf`.
 
-Production release verification will be recorded after deployment. Authenticated write checks use local fixtures only.
+Production release completed from code commit `f075b2e` on `main`. Migration `0004_pretty_kat_farrell.sql` applied successfully; no migrations remain pending. Content was staged, the Worker/assets deployed, and the complete catalog activated. All 860 production smoke assertions passed, including private routes and APIs, rejected anonymous/cross-origin writes, exact reader bundle/font/CSS matches, and byte-for-byte verification of all 195 figures. A separate read-only D1 check reconstructed all 128 published entries from 190 parts and confirmed every one of the 5,453 blocks exactly matches the audited source dataset. No personal production progress was read or written. Local browser-created reading marks were removed after verification.
+
+Deployment version: `6d62de39-d777-4246-b9ed-450aa6834403`.
 
 ## Synced lecture library and playback — 29 September 2026
 
